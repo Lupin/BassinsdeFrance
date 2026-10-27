@@ -1,4 +1,4 @@
-# Au fil de l’eau
+# Bassins de France — Au fil de l’eau
 
 Ouvrir dist/index.html dans un navigateur. Les scripts, les données et la police Inter sont fournis localement. Aucun serveur ni connexion réseau ne sont nécessaires à la consultation. Une copie autonome est fournie dans carte-cours-eau-france.html, dans le dossier outputs parent.
 
