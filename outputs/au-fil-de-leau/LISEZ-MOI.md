@@ -29,3 +29,7 @@ Le fond blanc est sélectionné par défaut. Les fonds IGN et OpenStreetMap sont
 ## Affichage et performances
 
 Le rendu animé est limité à 24 images/s, les particules sont dessinées sur un calque transparent séparé et seules les ramifications visibles à l’échelle actuelle sont préparées, avec un plafond de 3 200 particules. Les animations s’arrêtent quand l’onglet est masqué. Les chemins graphiques des cours d’eau et des surcouches polygonales sont préparés seulement quand ils sont utiles. Les données secondaires ne se chargent qu’à l’activation d’une surcouche, au lieu d’être décodées dès le démarrage. La résolution des canevas est plafonnée à 1,5× pour limiter la mémoire graphique sur les écrans Retina. Le bouton Pause laisse la carte statique.
+
+## Licence et crédits de réutilisation
+
+Le code et la documentation originaux du projet sont publiés sous licence MIT ; voir le fichier `../../LICENSE` à la racine du dépôt. Cette licence ne s’étend pas aux données, polices et fonds de carte de tiers. Les données BD TOPAGE® sont réutilisées selon la Licence Ouverte 2.0 de leur source, avec attribution IGN / OFB et Sandre. La police Inter reste sous SIL Open Font License 1.1 (fichier `dist/assets/Inter-LICENSE.txt`). Pour les conditions des autres couches et fonds, voir le pied de page de la carte et `../../THIRD-PARTY-NOTICES.md`.
