@@ -1,0 +1,4 @@
+# Données brutes téléchargées et fichiers de travail volumineux
+work/data/
+work/.firecrawl/
+outputs/carte-cours-eau-france.html

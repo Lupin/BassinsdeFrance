@@ -1,0 +1,722 @@
+[
+  {
+    "name": "loire",
+    "km": 1017.4,
+    "basin": "04",
+    "route": true,
+    "points": 556,
+    "first": [
+      693.06,
+      661.63
+    ],
+    "last": [
+      232.68,
+      407.37
+    ]
+  },
+  {
+    "name": "allier",
+    "km": 419.5,
+    "basin": "04",
+    "route": true,
+    "points": 328,
+    "first": [
+      661.89,
+      687.64
+    ],
+    "last": [
+      610.55,
+      440.98
+    ]
+  },
+  {
+    "name": "cher",
+    "km": 368.2,
+    "basin": "04",
+    "route": true,
+    "points": 284,
+    "first": [
+      566.93,
+      548.95
+    ],
+    "last": [
+      423.23,
+      401.12
+    ]
+  },
+  {
+    "name": "vienne",
+    "km": 363.8,
+    "basin": "04",
+    "route": true,
+    "points": 225,
+    "first": [
+      539.46,
+      575.92
+    ],
+    "last": [
+      393.84,
+      414.41
+    ]
+  },
+  {
+    "name": "indre",
+    "km": 286.3,
+    "basin": "04",
+    "route": true,
+    "points": 177,
+    "first": [
+      545.25,
+      496.62
+    ],
+    "last": [
+      402.88,
+      412.61
+    ]
+  },
+  {
+    "name": "maine",
+    "km": 12.3,
+    "basin": "04",
+    "route": true,
+    "points": 10,
+    "first": [
+      349.75,
+      385.56
+    ],
+    "last": [
+      344.58,
+      394.17
+    ]
+  },
+  {
+    "name": "sarthe",
+    "km": 400.5,
+    "basin": "04",
+    "route": true,
+    "points": 251,
+    "first": [
+      426.88,
+      267.56
+    ],
+    "last": [
+      349.75,
+      385.56
+    ]
+  },
+  {
+    "name": "mayenne",
+    "km": 222.6,
+    "basin": "04",
+    "route": true,
+    "points": 151,
+    "first": [
+      379.33,
+      285.32
+    ],
+    "last": [
+      349.75,
+      385.56
+    ]
+  },
+  {
+    "name": "loir",
+    "km": 399.3,
+    "basin": "04",
+    "route": true,
+    "points": 249,
+    "first": [
+      464.57,
+      293.47
+    ],
+    "last": [
+      350.86,
+      378.74
+    ]
+  },
+  {
+    "name": "creuse",
+    "km": 274.5,
+    "basin": "04",
+    "route": true,
+    "points": 218,
+    "first": [
+      545.74,
+      569.01
+    ],
+    "last": [
+      429.67,
+      436.12
+    ]
+  },
+  {
+    "name": "seine",
+    "km": 947.9,
+    "basin": "03",
+    "route": true,
+    "points": 547,
+    "first": [
+      728.42,
+      386.26
+    ],
+    "last": [
+      397.43,
+      183.4
+    ]
+  },
+  {
+    "name": "marne",
+    "km": 588.5,
+    "basin": "03",
+    "route": true,
+    "points": 461,
+    "first": [
+      774,
+      351.69
+    ],
+    "last": [
+      562.36,
+      247.89
+    ]
+  },
+  {
+    "name": "yonne",
+    "km": 344.1,
+    "basin": "03",
+    "route": true,
+    "points": 283,
+    "first": [
+      677.56,
+      441.48
+    ],
+    "last": [
+      601.77,
+      292.39
+    ]
+  },
+  {
+    "name": "oise",
+    "km": 421.1,
+    "basin": "03",
+    "route": true,
+    "points": 270,
+    "first": [
+      702.41,
+      125.18
+    ],
+    "last": [
+      537.97,
+      230.22
+    ]
+  },
+  {
+    "name": "aisne",
+    "km": 423,
+    "basin": "03",
+    "route": true,
+    "points": 324,
+    "first": [
+      762.02,
+      234.54
+    ],
+    "last": [
+      593.65,
+      183.66
+    ]
+  },
+  {
+    "name": "aube",
+    "km": 330.1,
+    "basin": "03",
+    "route": true,
+    "points": 105,
+    "first": [
+      710.73,
+      293.1
+    ],
+    "last": [
+      656.26,
+      274.78
+    ]
+  },
+  {
+    "name": "eure",
+    "km": 335.1,
+    "basin": "03",
+    "route": true,
+    "points": 64,
+    "first": [
+      488.22,
+      227.58
+    ],
+    "last": [
+      463.52,
+      198.09
+    ]
+  },
+  {
+    "name": "garonne",
+    "km": 555.8,
+    "basin": "05",
+    "route": true,
+    "points": 332,
+    "first": [
+      458.61,
+      893.38
+    ],
+    "last": [
+      344.55,
+      639.88
+    ]
+  },
+  {
+    "name": "dordogne",
+    "km": 531.5,
+    "basin": "05",
+    "route": true,
+    "points": 343,
+    "first": [
+      591.74,
+      589.69
+    ],
+    "last": [
+      344.55,
+      639.88
+    ]
+  },
+  {
+    "name": "lot",
+    "km": 488.1,
+    "basin": "05",
+    "route": true,
+    "points": 393,
+    "first": [
+      661.28,
+      695.26
+    ],
+    "last": [
+      412.87,
+      715.72
+    ]
+  },
+  {
+    "name": "tarn",
+    "km": 378.1,
+    "basin": "05",
+    "route": true,
+    "points": 269,
+    "first": [
+      663.21,
+      705.66
+    ],
+    "last": [
+      463.66,
+      739.69
+    ]
+  },
+  {
+    "name": "aveyron",
+    "km": 288.8,
+    "basin": "05",
+    "route": true,
+    "points": 246,
+    "first": [
+      611.55,
+      716.27
+    ],
+    "last": [
+      479.93,
+      739.74
+    ]
+  },
+  {
+    "name": "ariege",
+    "km": 182.2,
+    "basin": "05",
+    "route": true,
+    "points": 128,
+    "first": [
+      514.02,
+      902.72
+    ],
+    "last": [
+      490.28,
+      798.89
+    ]
+  },
+  {
+    "name": "vezere",
+    "km": 217.8,
+    "basin": "05",
+    "route": true,
+    "points": 179,
+    "first": [
+      539.96,
+      584.14
+    ],
+    "last": [
+      452.8,
+      657.09
+    ]
+  },
+  {
+    "name": "correze",
+    "km": 98,
+    "basin": "05",
+    "route": true,
+    "points": 96,
+    "first": [
+      533.99,
+      587.84
+    ],
+    "last": [
+      493.93,
+      627.47
+    ]
+  },
+  {
+    "name": "adour",
+    "km": 336.7,
+    "basin": "05",
+    "route": true,
+    "points": 205,
+    "first": [
+      411.71,
+      860
+    ],
+    "last": [
+      279.07,
+      797.71
+    ]
+  },
+  {
+    "name": "charente",
+    "km": 503.4,
+    "basin": "05",
+    "route": true,
+    "points": 348,
+    "first": [
+      444.3,
+      566.19
+    ],
+    "last": [
+      311.24,
+      545.54
+    ]
+  },
+  {
+    "name": "rhone",
+    "km": 539.9,
+    "basin": "06",
+    "route": true,
+    "points": 256,
+    "first": [
+      829.49,
+      519.88
+    ],
+    "last": [
+      737.6,
+      818.24
+    ]
+  },
+  {
+    "name": "saone",
+    "km": 474.9,
+    "basin": "06",
+    "route": true,
+    "points": 306,
+    "first": [
+      833.75,
+      323.22
+    ],
+    "last": [
+      735.8,
+      569.51
+    ]
+  },
+  {
+    "name": "doubs",
+    "km": 457.5,
+    "basin": "06",
+    "route": true,
+    "points": 329,
+    "first": [
+      835.86,
+      467.48
+    ],
+    "last": [
+      750.45,
+      446.98
+    ]
+  },
+  {
+    "name": "isere",
+    "km": 283.6,
+    "basin": "06",
+    "route": true,
+    "points": 142,
+    "first": [
+      899.74,
+      598.44
+    ],
+    "last": [
+      738.52,
+      646.49
+    ]
+  },
+  {
+    "name": "durance",
+    "km": 326.6,
+    "basin": "06",
+    "route": true,
+    "points": 197,
+    "first": [
+      872.7,
+      655.91
+    ],
+    "last": [
+      730.03,
+      756.69
+    ]
+  },
+  {
+    "name": "ardeche",
+    "km": 123.2,
+    "basin": "06",
+    "route": true,
+    "points": 89,
+    "first": [
+      679.88,
+      676.01
+    ],
+    "last": [
+      723.5,
+      721.38
+    ]
+  },
+  {
+    "name": "drome",
+    "km": 109.9,
+    "basin": "06",
+    "route": true,
+    "points": 64,
+    "first": [
+      795.81,
+      696.67
+    ],
+    "last": [
+      731.47,
+      668.6
+    ]
+  },
+  {
+    "name": "ain",
+    "km": 206.5,
+    "basin": "06",
+    "route": true,
+    "points": 164,
+    "first": [
+      822.48,
+      462.85
+    ],
+    "last": [
+      761.55,
+      562.29
+    ]
+  },
+  {
+    "name": "aude",
+    "km": 220.6,
+    "basin": "06",
+    "route": true,
+    "points": 143,
+    "first": [
+      534.25,
+      897.24
+    ],
+    "last": [
+      622.08,
+      830.67
+    ]
+  },
+  {
+    "name": "herault",
+    "km": 144.4,
+    "basin": "06",
+    "route": true,
+    "points": 108,
+    "first": [
+      643.95,
+      736.82
+    ],
+    "last": [
+      636.76,
+      823.41
+    ]
+  },
+  {
+    "name": "var",
+    "km": 117.7,
+    "basin": "06",
+    "route": true,
+    "points": 48,
+    "first": [
+      875.82,
+      750.55
+    ],
+    "last": [
+      907.21,
+      784.84
+    ]
+  },
+  {
+    "name": "rhin",
+    "km": 188.4,
+    "basin": "02",
+    "route": true,
+    "points": 62,
+    "first": [
+      934.91,
+      376.94
+    ],
+    "last": [
+      984.15,
+      230.35
+    ]
+  },
+  {
+    "name": "meuse",
+    "km": 501.6,
+    "basin": "02",
+    "route": true,
+    "points": 402,
+    "first": [
+      794.39,
+      335.48
+    ],
+    "last": [
+      736.23,
+      107.17
+    ]
+  },
+  {
+    "name": "moselle",
+    "km": 319.2,
+    "basin": "02",
+    "route": true,
+    "points": 242,
+    "first": [
+      885.05,
+      344.27
+    ],
+    "last": [
+      847.25,
+      179.88
+    ]
+  },
+  {
+    "name": "somme",
+    "km": 176.4,
+    "basin": "01",
+    "route": true,
+    "points": 82,
+    "first": [
+      616.37,
+      151.42
+    ],
+    "last": [
+      496.66,
+      101.93
+    ]
+  },
+  {
+    "name": "escaut",
+    "km": 100.1,
+    "basin": "01",
+    "route": true,
+    "points": 46,
+    "first": [
+      620.76,
+      106.48
+    ],
+    "last": [
+      638.25,
+      44.95
+    ]
+  },
+  {
+    "name": "vilaine",
+    "km": 245.8,
+    "basin": "04",
+    "route": true,
+    "points": 169,
+    "first": [
+      312.98,
+      308.94
+    ],
+    "last": [
+      217.35,
+      384.82
+    ]
+  },
+  {
+    "name": "blavet",
+    "km": 157.9,
+    "basin": "04",
+    "route": true,
+    "points": 120,
+    "first": [
+      155.24,
+      286.16
+    ],
+    "last": [
+      146.18,
+      363.39
+    ]
+  },
+  {
+    "name": "orne",
+    "km": 207.5,
+    "basin": "03",
+    "route": true,
+    "points": 176,
+    "first": [
+      405.13,
+      269.29
+    ],
+    "last": [
+      370.81,
+      201.74
+    ]
+  },
+  {
+    "name": "golo",
+    "km": 86.3,
+    "basin": "12",
+    "route": true,
+    "points": 68,
+    "first": [
+      1027.3,
+      921.71
+    ],
+    "last": [
+      1075.27,
+      902.38
+    ]
+  },
+  {
+    "name": "tavignano",
+    "km": 86,
+    "basin": "12",
+    "route": true,
+    "points": 76,
+    "first": [
+      1031.55,
+      930.36
+    ],
+    "last": [
+      1076.35,
+      945.95
+    ]
+  }
+]
