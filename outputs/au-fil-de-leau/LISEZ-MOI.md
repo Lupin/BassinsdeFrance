@@ -13,7 +13,7 @@ Données : IGN / OFB, BD TOPAGE®, diffusées par Sandre, Licence Ouverte 2.0.
 Contour : france-geojson / Grégoire David.
 Police : Inter, licence SIL OFL dans dist/assets/Inter-LICENSE.txt.
 
-Les 96 chefs-lieux et les limites départementales (overlay noir) sont activables séparément. Contours Etalab millésime 2026 à 100 m ; chefs-lieux et localisation des mairies via API Découpage administratif. Taille et vitesse visuelle des particules maintenues à toutes les échelles. Vérification de mouvement aux zooms ×1, ×3, ×6, ×12.
+Les 96 chefs-lieux, les limites départementales (noir) et les contours des sept grands bassins (couleur de chaque bassin) sont activables séparément. Contours Etalab millésime 2026 à 100 m ; chefs-lieux et localisation des mairies via API Découpage administratif. Taille et vitesse visuelle des particules maintenues à toutes les échelles. Vérification de mouvement aux zooms ×1, ×3, ×6, ×12.
 
 ## Nouvelles surcouches
 

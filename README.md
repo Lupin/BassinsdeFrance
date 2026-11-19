@@ -2,7 +2,7 @@
 
 [Ouvrir la carte interactive](https://lupin.github.io/BassinsdeFrance/)
 
-Carte animée des cours d’eau et des sept grands bassins hydrographiques de France métropolitaine. Le site publié est une page autonome : les données cartographiques nécessaires sont incluses dans `index.html`.
+Carte animée des cours d’eau et des sept grands bassins hydrographiques de France métropolitaine. Activez les contours colorés des bassins ou les limites départementales pour comparer les découpages. Le site publié est une page autonome : les données cartographiques nécessaires sont incluses dans `index.html`.
 
 Le dossier `outputs/au-fil-de-leau/` contient les sources séparées de l’application. Les scripts de préparation se trouvent dans `work/`. Les données brutes et caches d’extraction ne sont pas versionnés ; ils restent dans le dossier local `work/data/`.
 
