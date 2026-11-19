@@ -3,6 +3,9 @@
 const metresPerAtlasUnit = 6378137 * Math.PI / (180 * 72);
 const floodEndpoint = 'https://mapsref.brgm.fr/wxs/georisques/risques';
 const floodPreviews = new Map();
+const floodTargetResolution = 125;
+const floodMaxSide = 2800;
+const floodPixelBudget = 5_000_000;
 let floodTimer, floodFrame, floodKey, floodRequest;
 
 function cancelFloodDetail() {
@@ -16,6 +19,11 @@ function cancelFloodDetail() {
 }
 
 function initFloodLayer() {
+  $('#floodFocus').addEventListener('click', () => {
+    const [x1,y1,x2,y2] = viewBox();
+    const {ratio} = floodRequestSize(x2-x1,y2-y1);
+    zoomAt(Math.max(1.1, ratio * 1.08));
+  });
   for (const selector of ['#floodLayer', '#floodType']) {
     $(selector).addEventListener('change', () => {
       cancelFloodDetail();
@@ -62,6 +70,15 @@ function floodHasCoverage(image) {
   return false;
 }
 
+// The WMS scale depends on the requested image size, not the screen size.
+function floodRequestSize(spanX, spanY) {
+  const width = Math.max(Math.ceil(spanX * metresPerAtlasUnit / floodTargetResolution), Math.min(1400,Math.round(w*dpr)));
+  const height = Math.max(Math.ceil(spanY * metresPerAtlasUnit / floodTargetResolution), Math.min(1400,Math.round(h*dpr)));
+  const ratio = Math.max(width / floodMaxSide, height / floodMaxSide,
+                         Math.sqrt(width * height / floodPixelBudget));
+  return {width:Math.max(1,width), height:Math.max(1,height), ratio};
+}
+
 function drawFlood(c) {
   if (!$('#floodLayer').checked) return;
   const status = $('#floodStatus');
@@ -69,14 +86,12 @@ function drawFlood(c) {
   const preview = floodPreview(layer);
   const box = viewBox();
   const [x1,y1,x2,y2] = box;
-  const width = Math.max(1, Math.min(1400, Math.round(w*dpr)));
-  const height = Math.max(1, Math.min(1400, Math.round(h*dpr)));
-  const metresPerPixel = Math.max((x2-x1)/width,(y2-y1)/height)*metresPerAtlasUnit;
-  // GeoRisques only serves the detailed EAIP below 1:500 000.
-  if (metresPerPixel >= 138) {
+  const {width,height,ratio} = floodRequestSize(x2-x1,y2-y1);
+  $('#floodFocus').hidden = ratio <= 1;
+  if (ratio > 1) {
     if (floodKey) cancelFloodDetail();
     paintFlood(c, preview);
-    status.textContent = preview.image ? 'Vue d’ensemble · zoomez pour plus de détail.'
+    status.textContent = preview.image ? 'Vue d’ensemble · détail disponible à l’échelle d’une vallée.'
       : preview.failed ? 'Aperçu indisponible.' : 'Chargement des enveloppes…';
     return;
   }
