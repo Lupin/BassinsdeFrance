@@ -4,7 +4,7 @@ from collections import defaultdict
 from shapely.geometry import shape, mapping
 from shapely.ops import transform
 
-ROOT=Path('work/data'); OUT=Path('outputs/au-fil-de-leau/dist/layers-data.js')
+ROOT=Path('work/data'); OUT=Path('work/layers-intermediate.js')
 def project(lon,lat): return ((lon+5.4)*72,(51.2-lat)*104)
 def geom_polys(g, tol=.14):
     if not g or not g.get('coordinates'): return []

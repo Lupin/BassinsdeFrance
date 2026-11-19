@@ -2,9 +2,13 @@
 
 [Ouvrir la carte interactive](https://lupin.github.io/BassinsdeFrance/)
 
-Carte animée des cours d’eau et des sept grands bassins hydrographiques de France métropolitaine. Activez les contours colorés des bassins ou les limites départementales pour comparer les découpages. Le site publié est une page autonome : les données cartographiques nécessaires sont incluses dans `index.html`.
+Atlas animé des cours d’eau et des sept grands bassins de gestion de France métropolitaine, Corse incluse. Recherchez un cours d’eau, un chef-lieu, un département ou une région. Les fiches permettent de localiser les étapes du parcours et d’explorer les stations, ouvrages et milieux associés.
 
-Le dossier `outputs/au-fil-de-leau/` contient les sources séparées de l’application. Les scripts de préparation se trouvent dans `work/`. Les données brutes et caches d’extraction ne sont pas versionnés ; ils restent dans le dossier local `work/data/`.
+- Comparez un bassin avec les départements et régions actuels. Les limites départementales sont noires et les limites régionales en pointillé gris foncé. Les intersections d’au moins 1 km² sont calculées à l’avance.
+- Filtrez les débits observés dans la France métropolitaine, le bassin sélectionné ou la vue actuelle. Les mesures constituent un instantané du 26 octobre 2026.
+- Activez un bassin versant topographique à partir d’un point de la carte ou choisissez un fond facultatif, dont Positron d’OpenFreeMap.
+
+Les données de la BD TOPAGE® et les limites administratives sont stockées avec le projet. Les surcouches thématiques et les intersections sont chargées à la demande. Les parcours fondés sur des nœuds officiels couvrent un secteur pilote de la haute Loire. Ailleurs, l’animation indique un sens reconstitué.
 
 ## Licence du code
 
@@ -14,7 +18,9 @@ La licence MIT ne couvre pas les données hydrographiques ou administratives, le
 
 ## Ouvrir localement
 
-Ouvrir `index.html` dans un navigateur récent. Certains fonds de carte optionnels nécessitent une connexion Internet.
+Ouvrez `index.html` dans un navigateur récent, ou servez la racine avec `python3 -m http.server`. Les fonds en ligne et le service de bassins versants topographiques du Sandre nécessitent une connexion.
+
+`python3 work/package.py` reconstruit l’entrée GitHub Pages et l’export autonome `outputs/carte-cours-eau-france.html`. Les sources de l’interface et les données préparées résident dans `outputs/au-fil-de-leau/dist/`. Pour régénérer les couches à partir des données brutes locales dans `work/data/`, exécutez `work/build-layers.py`, puis `work/build-crossings.py` avec Shapely 2 et pyproj. `work/build-topology.py` extrait les tronçons du secteur pilote depuis le Sandre.
 
 ## Publication
 

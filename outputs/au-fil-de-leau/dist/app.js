@@ -3,12 +3,30 @@ const D=window.HYDRO,$=s=>document.querySelector(s),canvas=$('#map'),ctx=canvas.
 const colors={'01':'#bb2952','02':'#7350a1','03':'#225ab2','04':'#b38200','05':'#00836c','06':'#d34c27','12':'#b03788'};
 const oceans={'01':'Manche / mer du Nord','02':'Mer du Nord','03':'La Manche','04':'Océan Atlantique','05':'Océan Atlantique','06':'Mer Méditerranée','12':'Mer Méditerranée'};
 const normalize=s=>s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[’']/g,' ').replace(/^(le |la |les |l )/,'').trim();
+function mercatorDegrees(lat) {
+  const clamped = Math.max(-85.05112878, Math.min(85.05112878, lat));
+  return Math.asinh(Math.tan(clamped * Math.PI / 180)) * 180 / Math.PI;
+}
+const centerMercator = mercatorDegrees(46.45);
+function fromAtlas(point) {
+  point[1] = project(0, 51.2 - point[1] / 104)[1];
+  return point;
+}
+function convertPolys(polys) {
+  for (const polygon of polys) for (const ring of polygon) for (const point of ring) fromAtlas(point);
+}
+for (const river of D.rivers) for (const line of river.p) for (const point of line) fromAtlas(point);
+for (const item of D.basins) convertPolys(item.polys);
+convertPolys(D.land);
+for (const item of window.ADMIN.departments) {
+  fromAtlas(item.point);
+  convertPolys(item.polys);
+}
 const names=new Map();D.rivers.forEach((r,i)=>{r.i=i;r.key=normalize(r.n);if(!names.has(r.key))names.set(r.key,r);r.box=[Infinity,Infinity,-Infinity,-Infinity];for(const line of r.p)for(const p of line){r.box[0]=Math.min(r.box[0],p[0]);r.box[1]=Math.min(r.box[1],p[1]);r.box[2]=Math.max(r.box[2],p[0]);r.box[3]=Math.max(r.box[3],p[1])}});
 const overrides={maine:'04C0000002000855547'};for(const [key,id] of Object.entries(overrides)){let r=D.rivers.find(r=>r.id===id);if(r)names.set(key,r)}
 for(const [key,ids,label] of [['somme',['01C0000002000824194','01C0000002000818638'],'la Somme'],['escaut',['01C0000002000815351','01C0000002000822354'],"l’Escaut"]]){let parts=ids.map(id=>D.rivers.find(r=>r.id===id)).filter(Boolean);if(parts.length){let r=parts[0];r.p=parts.flatMap(x=>x.p);r.n=label;r.key=key;names.set(key,r)}}
 function polyPath(polys){let p=new Path2D();for(const poly of polys)for(const ring of poly){ring.forEach((v,i)=>i?p.lineTo(...v):p.moveTo(...v));p.closePath()}return p}
 D.basins.forEach(b=>b.path=polyPath(b.polys));const landPath=polyPath(D.land);const departments=window.ADMIN.departments;
-let EX=null,extraPromise=null;function loadExtraData(){if(EX)return Promise.resolve(EX);if(!extraPromise)extraPromise=new Promise((resolve,reject)=>{const lazy=$('#layers-data-lazy'),script=document.createElement('script'),loaded=()=>{if(EX)return;script.text='';script.remove();EX=window.EXTRA_DATA;EX.dams.forEach((x,i)=>x.i=i);EX.flows.forEach((x,i)=>x.i=i);EX.nuclear.forEach((x,i)=>x.i=i);$('#damCount').textContent=EX.dams.length.toLocaleString('fr-FR');$('#nuclearCount').textContent=EX.nuclear.length.toLocaleString('fr-FR');$('#flowCount').textContent=EX.flows.length.toLocaleString('fr-FR');$('#protectedCount').textContent=EX.protected.length.toLocaleString('fr-FR');$('#aquiferCount').textContent=EX.aquifers.length.toLocaleString('fr-FR');updateOverlayInfo();dirty=true;resolve(EX)};script.onload=loaded;script.onerror=()=>reject(new Error('Chargement des données des surcouches impossible'));const inline=lazy.type==='text/plain';if(inline)script.text=lazy.textContent;else script.src=lazy.dataset.src;lazy.remove();document.head.append(script);if(inline)loaded()});return extraPromise}function boundsOf(polys){let b=[Infinity,Infinity,-Infinity,-Infinity];for(const poly of polys)for(const ring of poly)for(const p of ring){b[0]=Math.min(b[0],p[0]);b[1]=Math.min(b[1],p[1]);b[2]=Math.max(b[2],p[0]);b[3]=Math.max(b[3],p[1])}return b}
 const specs={
 'loire':['Mont Gerbier-de-Jonc',null,'Océan Atlantique',[-2.2,47.26]],
 'allier':['Massif central','loire'], 'cher':['Massif central','loire'], 'vienne':['Plateau de Millevaches','loire'], 'indre':['Massif central','loire'], 'maine':['Confluence Sarthe–Mayenne','loire'], 'sarthe':['Perche','maine'], 'mayenne':['Mont des Avaloirs','maine'], 'loir':['Perche','sarthe'], 'creuse':['Plateau de Millevaches','vienne'],
@@ -17,7 +35,13 @@ const specs={
 'rhone':['Glacier du Rhône, Suisse',null,'Mer Méditerranée',[4.84,43.33]], 'saone':['Vioménil, Vosges','rhone'], 'doubs':['Mouthe, Jura','saone'], 'isere':['Alpes','rhone'], 'durance':['Hautes-Alpes','rhone'], 'ardeche':['Massif central','rhone'], 'drome':['Préalpes','rhone'], 'ain':['Jura','rhone'], 'aude':['Lac d’Aude',null,'Mer Méditerranée',[3.24,43.22]], 'herault':['Mont Aigoual',null,'Mer Méditerranée',[3.45,43.28]], 'var':['Entraunes',null,'Mer Méditerranée',[7.2,43.65]],
 'rhin':['Alpes suisses',null,'Mer du Nord, via Allemagne et Pays-Bas',[8.2,49.05]], 'meuse':['Pouilly-en-Bassigny',null,'Mer du Nord, via Belgique et Pays-Bas',[4.8,50.1]], 'moselle':['Vosges',null,'Rhin → mer du Nord, via Allemagne',[6.4,49.5]],
 'somme':['Fonsomme',null,'La Manche',[1.62,50.19]], 'escaut':['Gouy',null,'Mer du Nord, via Belgique et Pays-Bas',[3.5,50.5]], 'vilaine':['Juvigné',null,'Océan Atlantique',[-2.45,47.5]], 'blavet':['Bourbriac',null,'Océan Atlantique',[-3.35,47.7]], 'orne':['Aunou-sur-Orne',null,'La Manche',[-.23,49.28]], 'golo':['Monte Cinto',null,'Mer Méditerranée',[9.53,42.52]], 'tavignano':['Lac de Nino',null,'Mer Méditerranée',[9.55,42.1]]};
-function project(lon,lat){return [(lon+5.4)*72,(51.2-lat)*104]}
+function project(lon, lat) {
+  return [(lon + 5.4) * 72, 494 - (mercatorDegrees(lat) - centerMercator) * 72];
+}
+function unproject([x, y]) {
+  const mercator = ((494 - y) / 72 + centerMercator) * Math.PI / 180;
+  return [x / 72 - 5.4, Math.atan(Math.sinh(mercator)) * 180 / Math.PI];
+}
 function dist2(a,b){return (a[0]-b[0])**2+(a[1]-b[1])**2}
 function nearest(p,line){let best=Infinity,index=0;line.forEach((v,i)=>{let d=dist2(p,v);if(d<best){best=d;index=i}});return {d:best,i:index}}
 // Course geometries may be multipart. Assemble connected pieces, retain any disjoint pieces for base rendering.
@@ -38,57 +62,614 @@ function assembled(r,targetLine=null,sea=null){
 let building=new Set();function routeFor(key){let r=names.get(key),s=specs[key];if(!r||!s?.length||building.has(key))return null;if(r.route)return r.route;building.add(key);let parent=s[1]?routeFor(s[1]):null;if(s[1]&&!parent){building.delete(key);return null}let line=assembled(r,parent?.line,s[3]),join=null;if(line.length<2){building.delete(key);return null}if(parent){let a=nearest(line[0],parent.line),b=nearest(line.at(-1),parent.line);if(a.d<b.d){line.reverse();join=a.i}else join=b.i;if(Math.min(a.d,b.d)>12**2){building.delete(key);return null}}else if(s[3]){let sea=project(...s[3]);if(dist2(line[0],sea)<dist2(line.at(-1),sea))line.reverse()}
 const full=parent?line.concat(parent.line.slice(join+1),parent.after):line,after=parent?parent.line.slice(join+1).concat(parent.after):[];r.route={line,after,full,spec:s,parent};building.delete(key);return r.route}
 Object.keys(specs).forEach(routeFor);
-let selected=names.get('loire')||D.rivers[0],basin=null,playing=!matchMedia('(prefers-reduced-motion: reduce)').matches,speed=1,phase=0,zoom=1,tx=0,ty=0,w=0,h=0,dpr=1,scale=1,ox=0,oy=0,visible=[],dirty=true;
-function pathFrom(line){const p=new Path2D();line.forEach((v,i)=>i?p.lineTo(...v):p.moveTo(...v));return p}function strokeRiver(c,r){c.beginPath();for(const line of r.p){if(!line.length)continue;c.moveTo(line[0][0],line[0][1]);for(let i=1;i<line.length;i++)c.lineTo(line[i][0],line[i][1])}c.stroke()}
-function resize(){let rect=$('#mapbox').getBoundingClientRect();w=rect.width;h=rect.height;dpr=Math.min(devicePixelRatio||1,1.5);canvas.width=flowCanvas.width=base.width=labelsLayer.width=Math.round(w*dpr);canvas.height=flowCanvas.height=base.height=labelsLayer.height=Math.round(h*dpr);scale=Math.min((w-55)/1090,(h-40)/1040);ox=(w-1090*scale)/2;oy=(h-1040*scale)/2;dirty=true}
-new ResizeObserver(resize).observe($('#mapbox'));
-function transform(c){c.setTransform(dpr,0,0,dpr,0,0);c.translate(ox+tx,oy+ty);c.scale(scale*zoom,scale*zoom)}
-const osmTileCache=new Map();function osmY(lat,z){let rad=Math.max(-85.05112878,Math.min(85.05112878,lat))*Math.PI/180,n=2**z;return Math.floor((1-Math.asinh(Math.tan(rad))/Math.PI)/2*n)}function osmLat(y,z){return Math.atan(Math.sinh(Math.PI*(1-2*y/2**z)))*180/Math.PI}function drawTiles(c,style){const a=world(0,0),b=world(w,h),lon0=Math.max(-180,a[0]/72-5.4),lon1=Math.min(180,b[0]/72-5.4),latNorth=Math.min(85.05112878,51.2-a[1]/104),latSouth=Math.max(-85.05112878,51.2-b[1]/104),z=Math.max(2,Math.min(17,Math.round(Math.log2(Math.max(.01,scale*zoom)*72*360/256)))),n=2**z,x0=Math.max(0,Math.floor((lon0+180)/360*n)),x1=Math.min(n-1,Math.floor((lon1+180)/360*n)),y0=Math.max(0,osmY(latNorth,z)),y1=Math.min(n-1,osmY(latSouth,z));c.save();c.globalAlpha=style==='osm'?.82:style==='osm-muted'?.52:.72;c.filter=style==='osm-muted'?'grayscale(1)':'none';for(let ty=y0;ty<=y1;ty++)for(let txi=x0;txi<=x1;txi++){const tileKey=z+'/'+txi+'/'+ty,key=style+'/'+tileKey;let img=osmTileCache.get(key);if(!img){img=new Image();img.referrerPolicy='strict-origin-when-cross-origin';img.onload=()=>{dirty=true};img.onerror=()=>{osmTileCache.set(key,null)};osmTileCache.set(key,img);img.src=style==='ign'?'https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&STYLE=normal&FORMAT=image/png&TILEMATRIXSET=PM&TILEMATRIX='+z+'&TILEROW='+ty+'&TILECOL='+txi:'https://tile.openstreetmap.org/'+tileKey+'.png'}if(!img||!img.complete||!img.naturalWidth)continue;const west=txi/n*360-180,east=(txi+1)/n*360-180,p0=project(west,0),p1=project(east,0),destX=p0[0],destWidth=p1[0]-p0[0];for(let band=0;band<32;band++){const sy=band*8,latN=osmLat(ty+sy/256,z),latS=osmLat(ty+(sy+8)/256,z),top=project(0,latN)[1],bottom=project(0,latS)[1];c.drawImage(img,0,sy,256,8,destX,top,destWidth,bottom-top)}}c.restore()}
-function threshold(){return [30,12,4,1.8][+$('#density').value]/Math.max(1,zoom*.75)}
-function renderBase(){bc.setTransform(1,0,0,1,0,0);bc.clearRect(0,0,base.width,base.height);bc.fillStyle='#fff';bc.fillRect(0,0,base.width,base.height);transform(bc);const s=scale*zoom;
- const basemap=$('#basemap').value;if(['ign','osm-muted','osm'].includes(basemap)){drawTiles(bc,basemap);bc.strokeStyle='#aab1b8';bc.lineWidth=.8/s;bc.stroke(landPath)}else{bc.fillStyle='#fff';bc.fill(landPath);bc.strokeStyle='#c3c7ce';bc.lineWidth=.8/s;bc.stroke(landPath)}
- if(EX&&$('#protectedLayer').checked){const kind=$('#protectedFilter').value;for(const a of EX.protected){if(!a.path){a.path=polyPath(a.polys);a.box=boundsOf(a.polys)}if(kind!=='all'&&a.kind!==kind&&!(kind==='reserves'&&['rnn','rnr','rnc'].includes(a.kind)))continue;bc.globalAlpha=.20;bc.fillStyle='#287348';bc.fill(a.path,'evenodd');bc.globalAlpha=.68;bc.strokeStyle='#205e3b';bc.lineWidth=.32/s;bc.stroke(a.path)}}
- if(EX&&$('#aquiferLayer').checked){for(const a of EX.aquifers)if(!a.path){a.path=polyPath(a.polys);a.box=boundsOf(a.polys)}bc.globalAlpha=.2;bc.fillStyle='#2e79a6';bc.strokeStyle='#23678a';bc.lineWidth=.48/s;bc.setLineDash([3/s,2/s]);for(const a of EX.aquifers){bc.fill(a.path,'evenodd');bc.stroke(a.path)}bc.setLineDash([]);bc.globalAlpha=1}
- for(const b of D.basins){if($('#areas').checked){bc.fillStyle=colors[b.id];bc.globalAlpha=basin&&basin!==b.id ? .015:.055;bc.fill(b.path,'evenodd')}bc.globalAlpha=1;bc.strokeStyle='#d5d8de';bc.lineWidth=.5/s;bc.setLineDash([2/s,3/s]);bc.stroke(b.path);bc.setLineDash([])}
- visible=D.rivers.filter(r=>r.l>=threshold()||r===selected);const v0=world(-10,-10),v1=world(w+10,h+10),s0=scale*zoom,branches=[],riverStep=Math.max(1,Math.ceil(visible.length/2600));let particleBudget=0;for(const r of visible){if((r.i%riverStep!==0&&r!==selected)||(basin&&r.b!==basin))continue;const b=r.box;if(b[2]<v0[0]||b[0]>v1[0]||b[3]<v0[1]||b[1]>v1[1]||r.l*s0<1.2)continue;r.p.forEach((line,li)=>{if(line.length<2)return;let signs=r.o?.[li]||'+'.repeat(line.length-1),start=0,sign=signs[0];function add(end){let part=line.slice(start,end+1);if(sign==='-')part.reverse();let f=prepareFlow(part);if(f.total*s0<1.2)return;const count=Math.max(1,Math.ceil(f.total*s0/38));particleBudget+=count;branches.push({r,f,count})}for(let i=1;i<line.length-1;i++)if(signs[i]!==sign){add(i);start=i;sign=signs[i]}add(line.length-1)})}const maxParticles=3200,branchStep=Math.max(1,Math.ceil(branches.length/maxParticles)),densityScale=Math.min(1,maxParticles/Math.max(1,particleBudget));animatedBranches=branches.filter((_,i)=>i%branchStep===0).map(({r,f,count})=>({r,f,count:Math.max(1,Math.floor(count*densityScale))}));for(let i=visible.length-1;i>=0;i--){let r=visible[i];bc.globalAlpha=basin&&r.b!==basin? .07: r.l>100?.95:r.l>25?.8:.62;bc.strokeStyle=colors[r.b];bc.lineWidth=(r.l>350?1.6:r.l>100?1.1:r.l>30?.75:.42)/Math.pow(s,.8);strokeRiver(bc,r)}bc.globalAlpha=1;
- if(selected){bc.strokeStyle=colors[selected.b];bc.lineWidth=2.3/s;strokeRiver(bc,selected);if(selected.route){bc.lineWidth=2/s;bc.stroke(pathFrom(selected.route.full))}}
- lc.setTransform(1,0,0,1,0,0);lc.clearRect(0,0,labelsLayer.width,labelsLayer.height);transform(lc);if($('#basinBoundaries').checked){lc.globalAlpha=.9;lc.lineWidth=1.25/s;for(const b of D.basins){lc.strokeStyle=colors[b.id]||'#46505c';lc.stroke(b.path)}}if($('#departments').checked){for(const dep of departments)if(!dep.path)dep.path=polyPath(dep.polys);lc.strokeStyle='#000';lc.lineWidth=.95/s;lc.globalAlpha=1;for(const dep of departments)lc.stroke(dep.path)}drawExtraMarkers(lc,s);if($('#cities').checked)drawLabels(lc,s);if($('#prefectures').checked)drawPrefectures(lc,s);
- $('#visibleCount').textContent=visible.length.toLocaleString('fr-FR')+' cours d’eau affichés';dirty=false;flowDirty=true}
-const cities=[['Paris',2.35,48.86],['Lyon',4.84,45.76],['Bordeaux',-.58,44.84],['Nantes',-1.55,47.22],['Toulouse',1.44,43.6],['Strasbourg',7.75,48.58],['Lille',3.06,50.63],['Marseille',5.37,43.3],['Rennes',-1.68,48.11],['Dijon',5.04,47.32],['Clermont-Ferrand',3.09,45.78],['Bastia',9.45,42.7],['Limoges',1.26,45.83]];
-function screenPoint(p){return [ox+tx+p[0]*scale*zoom,oy+ty+p[1]*scale*zoom]}
-function flowInFilter(q){const value=$('#flowFilter').value;if(value==='all')return true;const [min,max]=value.split(':').slice(1).map(Number);return q>=min&&q<max}function drawExtraMarkers(c,s){if(!EX)return;c.save();c.setTransform(dpr,0,0,dpr,0,0);if($('#hydroDams').checked){const cells=new Map();for(const x of EX.dams){const [px,py]=screenPoint(x.p);if(px< -8||px>w+8||py< -8||py>h+8)continue;const k=Math.floor(px/15)+','+Math.floor(py/15);let a=cells.get(k);if(!a)cells.set(k,a=[]);a.push([x,px,py])}for(const group of cells.values()){const x=group[0][1],y=group[0][2],n=group.length;c.beginPath();c.arc(x,y,Math.min(7,2.5+Math.log2(n)),0,Math.PI*2);c.fillStyle='#fff';c.fill();c.strokeStyle='#2773a5';c.lineWidth=1.4;c.stroke();if(n>1){c.fillStyle='#205c83';c.font='8px Inter';c.textAlign='center';c.textBaseline='middle';c.fillText(n>99?'99+':String(n),x,y)}}}
-if($('#nuclearPlants').checked)for(const x of EX.nuclear){const [px,py]=screenPoint(x.p);if(px< -8||px>w+8||py< -8||py>h+8)continue;c.beginPath();c.arc(px,py,5,0,Math.PI*2);c.fillStyle='#fff';c.fill();c.strokeStyle='#17191c';c.lineWidth=1.6;c.stroke();c.beginPath();c.arc(px,py,2.3,0,Math.PI*2);c.fillStyle='#e6b83f';c.fill()}
-if($('#flowsLayer').checked){for(const x of EX.flows){if(!flowInFilter(x.q))continue;const [px,py]=screenPoint(x.p);if(px< -8||px>w+8||py< -8||py>h+8)continue;const r=Math.max(2.2,Math.min(5.5,2.1+Math.log10(1+x.q)*.75));c.beginPath();c.arc(px,py,r,0,Math.PI*2);c.fillStyle='#fff';c.fill();c.strokeStyle='#078b92';c.lineWidth=1.6;c.stroke();c.beginPath();c.arc(px,py,Math.max(.7,r-1.6),0,Math.PI*2);c.fillStyle='#078b92';c.fill();if(zoom>=2.7){c.font='9px Inter';c.fillStyle='#12676e';c.textAlign='left';c.textBaseline='middle';c.fillText(x.q<1?x.q.toLocaleString('fr-FR',{maximumFractionDigits:2}):x.q.toLocaleString('fr-FR',{maximumFractionDigits:1}),px+6,py-5)}}}c.restore()}
-function drawLabels(c,s){c.font=`${9/s}px Inter`;c.textBaseline='middle';for(let [name,lon,lat] of ($('#prefectures').checked?[]:cities)){let p=project(lon,lat);c.fillStyle='#959ba5';c.beginPath();c.arc(...p,1.7/s,0,Math.PI*2);c.fill();c.strokeStyle='#fff';c.lineWidth=3/s;c.strokeText(name,p[0]+5/s,p[1]-4/s);c.fillStyle='#8b919c';c.fillText(name,p[0]+5/s,p[1]-4/s)}
- const riverLabels=['loire','seine','rhone','garonne','dordogne','rhin','meuse','saone','allier','tarn','lot','marne'];for(const key of riverLabels){let r=names.get(key);if(!r||basin&&r.b!==basin)continue;let line=r.route?.line||r.p[0],p=line[Math.floor(line.length*.5)];c.font=`500 ${10/s}px Inter`;c.strokeStyle='#fff';c.lineWidth=3/s;c.strokeText(r.n,p[0]+6/s,p[1]-6/s);c.fillStyle=colors[r.b];c.fillText(r.n,p[0]+6/s,p[1]-6/s)}
- c.font=`${11/s}px Inter`;c.fillStyle='#b6bbc2';for(const [name,lon,lat] of [['LA MANCHE',-2.7,49.7],['ATLANTIQUE',-4.1,45.5],['MÉDITERRANÉE',5.5,42.2]]){let p=project(lon,lat);c.fillText(name,...p)}}
-function drawPrefectures(c,s){
- c.save();c.setTransform(dpr,0,0,dpr,0,0);c.font='9px Inter';c.textBaseline='middle';const occupied=[];let placed=[];
- const ordered=departments.slice().sort((a,b)=>a.code==='75'?-1:b.code==='75'?1:a.point[1]-b.point[1]);
- for(const dep of ordered){let x=ox+tx+dep.point[0]*s,y=oy+ty+dep.point[1]*s;if(x<0||x>w||y<0||y>h)continue;let text=dep.chief+' · '+dep.code,width=c.measureText(text).width,box=null,score=Infinity;
-  for(let radius of [0,12,24,38,54,72]){for(let side of [1,-1])for(let dy of [0,-10,10,-20,20]){let xx=x+side*(6+radius)-(side<0?width:0),yy=y+dy,bb=[xx-2,yy-6,xx+width+2,yy+6];if(bb[0]<3||bb[2]>w-3||bb[1]<3||bb[3]>h-20)continue;let hits=occupied.filter(b=>bb[0]<b[2]&&bb[2]>b[0]&&bb[1]<b[3]&&bb[3]>b[1]).length,cost=hits*10000+radius+Math.abs(dy)*.8;if(cost<score){score=cost;box={bb,xx,yy}}}if(score<10000)break}
-  if(!box)box={bb:[x+3,y-5,x+width+5,y+5],xx:x+5,yy:y};occupied.push(box.bb);placed.push({dep,x,y,text,...box});
- }
- for(let p of placed){let cx=Math.min(Math.max(p.x,p.bb[0]),p.bb[2]),cy=p.yy;if(Math.abs(cx-p.x)>12||Math.abs(cy-p.y)>10){c.strokeStyle='#7e838b';c.lineWidth=.5;c.beginPath();c.moveTo(p.x,p.y);c.lineTo(cx,cy);c.stroke()}}
- for(let p of placed){c.fillStyle='#fff';c.beginPath();c.arc(p.x,p.y,2.8,0,Math.PI*2);c.fill();c.fillStyle='#111';c.beginPath();c.arc(p.x,p.y,1.5,0,Math.PI*2);c.fill();c.strokeStyle='#fff';c.lineWidth=3;c.lineJoin='round';c.strokeText(p.text,p.xx,p.yy);c.fillStyle='#222';c.fillText(p.text,p.xx,p.yy)}c.restore();
-}
-function prefectureHit(x,y){if(!$('#prefectures').checked)return null;let result=null,best=7*7;for(let dep of departments){let px=ox+tx+dep.point[0]*scale*zoom,py=oy+ty+dep.point[1]*scale*zoom,d=(x-px)**2+(y-py)**2;if(d<best){best=d;result=dep}}return result}
-function showPrefecture(dep){selected=null;let detail=$('#detail');detail.replaceChildren(node('h2',dep.chief),node('p','Chef-lieu du département '+dep.name+' ('+dep.code+').'),node('p','Découpage départemental actuel, millésime 2026. Le point est situé à la mairie de la commune chef-lieu. Les limites noires se superposent indépendamment aux bassins hydrographiques.'));dirty=true}
-function overlayLabel(x){if(x.kind)return x.label+' · '+x.n;if(x.type==='dam')return x.item.n+' · ouvrage hydroélectrique';if(x.type==='nuclear')return x.item.n+' · centrale nucléaire';if(x.type==='flow')return x.item.river+' · '+x.item.q.toLocaleString('fr-FR')+' m³/s';return x.item.n}
-function layerHit(px,py){if(!EX)return null;const radius=9,limit=radius*radius;function closest(items,type){let best=limit,hit=null;for(const item of items){const q=screenPoint(item.p),d=(px-q[0])**2+(py-q[1])**2;if(d<best){best=d;hit={type,item}}}return hit}let h;if($('#nuclearPlants').checked&&(h=closest(EX.nuclear,'nuclear')))return h;if($('#flowsLayer').checked){const min=Number($('#flowFilter').value);if(h=closest(EX.flows.filter(x=>x.q>=min),'flow'))return h}if($('#hydroDams').checked&&(h=closest(EX.dams,'dam')))return h;const p=world(px,py);bc.setTransform(1,0,0,1,0,0);const inside=x=>p[0]>=x.box[0]&&p[0]<=x.box[2]&&p[1]>=x.box[1]&&p[1]<=x.box[3]&&bc.isPointInPath(x.path,p[0],p[1],'evenodd');if($('#aquiferLayer').checked)for(let i=EX.aquifers.length-1;i>=0;i--)if(inside(EX.aquifers[i]))return {type:'aquifer',item:EX.aquifers[i]};if(EX&&$('#protectedLayer').checked){const kind=$('#protectedFilter').value;for(let i=EX.protected.length-1;i>=0;i--){const a=EX.protected[i];if(kind!=='all'&&a.kind!==kind&&!(kind==='reserves'&&['rnn','rnr','rnc'].includes(a.kind)))continue;if(inside(a))return {type:'protected',item:a}}}return null}
-function showLayer(hit){selected=null;const {type,item:x}=hit,detail=$('#detail');detail.replaceChildren();const title=x.n||x.label;detail.append(node('h2',title));let tag=node('div',null,'basin-tag');tag.append(document.createTextNode(({dam:'Ouvrage ROE à usage hydroélectrique',nuclear:'Centrale nucléaire · EDF',flow:'Station hydrométrique · Hub’Eau',protected:x.label,aquifer:'Entité de nappe captive · BD LISA'})[type]));detail.append(tag);let meta=node('div',null,'detail-meta');const add=(label,value)=>{if(value!==undefined&&value!==null&&String(value)!==''){let line=node('div');line.append(node('strong',label+' : '),document.createTextNode(String(value)));meta.append(line)}};if(type==='dam'){add('Identifiant ROE',x.id);add('Cours d’eau',x.river);add('Commune',x.commune+(x.dep?' · '+x.dep:''));add('Hauteur de chute à l’étiage',x.height?x.height+' m':'non renseignée');add('Mise à jour de la fiche',x.updated);add('Type Sandre',x.type)}else if(type==='nuclear'){add('Commune',x.commune+' · '+x.dep);add('Réacteurs recensés',x.reactors);add('Puissance installée',x.mw.toLocaleString('fr-FR')+' MW');add('Mise en service la plus ancienne',x.startup);add('Source',"registre EDF — périmètre EDF, puissance installée ; statut d’exploitation non déduit") }else if(type==='flow'){add('Cours d’eau',x.river);add('Débit observé',x.q.toLocaleString('fr-FR',{maximumFractionDigits:3})+' m³/s');add('Date et heure',new Date(x.date).toLocaleString('fr-FR',{dateStyle:'medium',timeStyle:'short',timeZone:'Europe/Paris'})+' · heure de Paris');add('Qualification',x.qualification||'non précisée');add('Statut',x.status||'non précisé');add('Code station',x.site)}else if(type==='protected'){add('Catégorie',x.label);add('Identifiant',x.id);add('Création',x.created);add('Dernière mise à jour connue',x.modified);if(x.zone)add('Zone',x.zone)}else{add('Code BD LISA',x.id);add('Niveau',x.level);add('Classe hydrogéologique','captive selon EtatEH')}detail.append(meta);if(type==='protected'&&x.url){let a=node('a','Fiche INPN ↗');a.href=x.url;a.target='_blank';a.rel='noopener';detail.append(a)}let note=type==='dam'?'Le ROE référence des obstacles dont l’usage est l’énergie et l’hydroélectricité ; tous ne sont pas des barrages.':type==='nuclear'?'La puissance installée et le nombre de réacteurs décrivent les données EDF, pas la production instantanée ni leur état actuel.':type==='flow'?'Observation brute à une station. Le relevé de la couche est un instantané du 26 octobre 2026 entre 16 h 50 et 17 h (heure de Paris) ; les mesures ne sont pas toutes qualifiées.':type==='protected'?'Le périmètre affiché relève de la catégorie indiquée ; les règles et degrés de protection varient selon le dispositif.':'Une nappe captive n’implique pas que l’eau jaillisse naturellement en surface : la couche ne certifie pas les zones artésiennes.';detail.append(node('p',note));dirty=true}
-function prepareFlow(line){const cum=new Float32Array(line.length);for(let i=1;i<line.length;i++)cum[i]=cum[i-1]+Math.sqrt(dist2(line[i-1],line[i]));return {line,cum,total:cum[cum.length-1]||0}}
 
-function particle(c,f,t,s,radius=1.65,outline=null){if(!f.total)return;let distance=t%f.total,lo=0,hi=f.cum.length-1;while(lo<hi){let mid=(lo+hi)>>1;if(f.cum[mid]<distance)lo=mid+1;else hi=mid}let i=Math.max(1,lo),a=f.line[i-1],b=f.line[i],u=(distance-f.cum[i-1])/(f.cum[i]-f.cum[i-1]||1);let x=a[0]+u*(b[0]-a[0]),y=a[1]+u*(b[1]-a[1]);c.beginPath();c.arc(x,y,radius/s,0,Math.PI*2);if(outline){c.fillStyle=outline;c.fill();c.beginPath();c.arc(x,y,radius*.48/s,0,Math.PI*2);c.fillStyle='#fff'}c.fill()}
-let animatedBranches=[],flowDirty=true,lastFrame=0;function paintStatic(){ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(base,0,0);ctx.drawImage(labelsLayer,0,0)}function frame(time){if(document.hidden){lastFrame=0;requestAnimationFrame(frame);return}const frameInterval=drag?1000/12:1000/24;if(time-lastFrame<frameInterval){requestAnimationFrame(frame);return}const elapsed=lastFrame?Math.min(100,time-lastFrame):frameInterval;lastFrame=time;if(playing)phase+=elapsed*.018*speed/(scale*zoom);if(dirty){renderBase();paintStatic()}if(playing||flowDirty){fx.setTransform(1,0,0,1,0,0);fx.clearRect(0,0,flowCanvas.width,flowCanvas.height);flowDirty=false;if(playing){transform(fx);let s=scale*zoom;fx.fillStyle='#fff';fx.globalAlpha=.9;for(const item of animatedBranches){const {r,f,count}=item;for(let j=0;j<count;j++)particle(fx,f,phase+j*f.total/count+r.i*.37,s,zoom>=2?1.1:r.l>100?1:.65,colors[r.b])}fx.globalAlpha=1;if(selected?.route){const f=selected.fullFlow||(selected.fullFlow=prepareFlow(selected.route.full));for(let p=0;p<f.total;p+=36/s)particle(fx,f,phase+p,s)}}}requestAnimationFrame(frame)}
-function basinButtons(){let holder=$('#basins');holder.replaceChildren();const entries=[{id:null,name:'Tous les bassins'},...D.basins];for(const b of entries){let button=document.createElement('button');button.className='basin'+(basin===b.id?' active':'');button.setAttribute('aria-pressed',basin===b.id);let mark=document.createElement('span');mark.className='mark';mark.style.background=b.id?colors[b.id]:'#1b1d22';button.append(mark,document.createTextNode(b.name));let num=document.createElement('span');num.className='num';num.textContent=(b.id?D.rivers.filter(r=>r.b===b.id).length:D.rivers.length).toLocaleString('fr-FR');button.append(num);button.onclick=()=>{basin=b.id;$('#viewtitle').textContent=b.name;if(b.id&&selected?.b!==b.id)selectRiver(D.rivers.find(r=>r.b===b.id));basinButtons();dirty=true};holder.append(button)}}
-function node(tag,text,cls){let e=document.createElement(tag);if(text)e.textContent=text;if(cls)e.className=cls;return e}
-function selectRiver(r){selected=r;$('#results').replaceChildren();$('#search').value='';let detail=$('#detail');detail.replaceChildren();detail.style.setProperty('--color',colors[r.b]);detail.append(node('h2',r.n));let tag=node('div',null,'basin-tag'),dot=node('i');dot.style.background=colors[r.b];tag.append(dot,document.createTextNode(D.basins.find(b=>b.id===r.b)?.name||''));detail.append(tag);let metric=node('div',null,'metric');let length=r.route?r.route.line.slice(1).reduce((sum,p,i)=>sum+Math.sqrt(dist2(p,r.route.line[i])),0)*1.06:r.l;metric.append(node('strong','≈ '+Math.round(length).toLocaleString('fr-FR')),node('span','km · tracé représenté'));detail.append(metric);
- if(r.route){let route=node('div',null,'route'),steps=[['SOURCE',r.route.spec[0]],['COURS D’EAU',r.n]],current=r;while(current.route?.spec[1]){current=names.get(current.route.spec[1]);if(!current)break;steps.push(['CONFLUENCE',current.n])}let sea=current?.route?.spec[2]||oceans[r.b];steps.push(['DESTINATION',sea]);for(let [label,value] of steps){let stop=node('div',null,'stop');stop.append(node('small',label),document.createTextNode(value));route.append(stop)}detail.append(route)}else detail.append(node('p','Ce cours d’eau est représenté par sa géométrie officielle. Son animation suit un sens déduit des connexions du réseau ; la chaîne aval détaillée n’est pas encore disponible pour ce cours d’eau.'));
- let children=D.rivers.filter(x=>x.route?.spec[1]===r.key);if(children.length){let list=node('div',null,'tributaries');list.append(node('h3','AFFLUENTS À EXPLORER'));for(let child of children){let btn=node('button',child.n);btn.append(node('span','↗'));btn.onclick=()=>selectRiver(child);list.append(btn)}detail.append(list)}dirty=true}
-$('#search').addEventListener('input',()=>{let q=normalize($('#search').value);$('#results').replaceChildren();if(q.length<2)return;let found=D.rivers.filter(r=>r.key.includes(q)).sort((a,b)=>(a.key===q?-1:0)-(b.key===q?-1:0)||b.l-a.l).slice(0,12);if(!found.length)$('#results').append(node('p','Aucun résultat.'));for(const r of found){let btn=node('button',r.n,'result');btn.append(node('small',D.basins.find(b=>b.id===r.b).name+' · ≈ '+Math.round(r.l)+' km'));btn.onclick=()=>{basin=r.b;basinButtons();$('#viewtitle').textContent=D.basins.find(b=>b.id===r.b).name;selectRiver(r)};$('#results').append(btn)}});
-function world(x,y){return [(x-ox-tx)/(scale*zoom),(y-oy-ty)/(scale*zoom)]}
-function nearestHit(x,y){let p=world(x,y),limit=7/(scale*zoom),best=limit*limit,result=null;for(let r of visible){if(basin&&r.b!==basin)continue;let b=r.box;if(p[0]<b[0]-limit||p[0]>b[2]+limit||p[1]<b[1]-limit||p[1]>b[3]+limit)continue;for(let line of r.p)for(let i=1;i<line.length;i++){let a=line[i-1],b=line[i],dx=b[0]-a[0],dy=b[1]-a[1],t=Math.max(0,Math.min(1,((p[0]-a[0])*dx+(p[1]-a[1])*dy)/(dx*dx+dy*dy||1))),d=dist2(p,[a[0]+t*dx,a[1]+t*dy]);if(d<best){best=d;result=r}}}return result}
-let drag=null,moved=false,hoverTime=0;canvas.onpointerdown=e=>{canvas.setPointerCapture(e.pointerId);drag={x:e.clientX,y:e.clientY,tx,ty};moved=false;canvas.style.cursor='grabbing';$('#tooltip').hidden=true};canvas.onpointermove=e=>{if(drag){let dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>4)moved=true;tx=drag.tx+dx;ty=drag.ty+dy;dirty=true;return}if(performance.now()-hoverTime<100)return;hoverTime=performance.now();let rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top,extra=layerHit(x,y),dep=extra?null:prefectureHit(x,y),r=extra||dep?null:nearestHit(x,y),tip=$('#tooltip');tip.hidden=!r&&!dep&&!extra;if(r||dep||extra){tip.textContent=extra?overlayLabel(extra):dep?dep.chief+' · '+dep.name+' ('+dep.code+')':r.n;tip.style.left=Math.min(w-180,x+12)+'px';tip.style.top=Math.max(5,y-28)+'px';canvas.style.cursor='pointer'}else canvas.style.cursor='grab'};canvas.onpointerup=e=>{if(!moved){let rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top,extra=layerHit(x,y),dep=extra?null:prefectureHit(x,y),r=extra||dep?null:nearestHit(x,y);if(extra)showLayer(extra);else if(dep)showPrefecture(dep);else if(r)selectRiver(r)}drag=null;canvas.style.cursor='grab'};canvas.onpointercancel=()=>drag=null;canvas.onpointerleave=()=>{$('#tooltip').hidden=true};
-function zoomAt(f,x=w/2,y=h/2){let old=zoom;zoom=Math.max(1,Math.min(12,zoom*f));tx=x-ox-(x-ox-tx)*zoom/old;ty=y-oy-(y-oy-ty)*zoom/old;dirty=true}canvas.addEventListener('wheel',e=>{e.preventDefault();let r=canvas.getBoundingClientRect();zoomAt(e.deltaY>0?.88:1.14,e.clientX-r.left,e.clientY-r.top)},{passive:false});$('#plus').onclick=()=>zoomAt(1.4);$('#minus').onclick=()=>zoomAt(1/1.4);$('#reset').onclick=()=>{zoom=1;tx=ty=0;dirty=true};canvas.onkeydown=e=>{if(e.key==='+'||e.key==='=')zoomAt(1.3);if(e.key==='-')zoomAt(1/1.3);if(e.key==='Home'){zoom=1;tx=ty=0;dirty=true}if(e.key==='ArrowLeft'){tx+=40;dirty=true}if(e.key==='ArrowRight'){tx-=40;dirty=true}if(e.key==='ArrowUp'){ty+=40;dirty=true}if(e.key==='ArrowDown'){ty-=40;dirty=true}};
-$('#areas').onchange=$('#basinBoundaries').onchange=$('#cities').onchange=$('#prefectures').onchange=()=>dirty=true;$('#departments').onchange=()=>{if(!$('#departments').checked)for(const dep of departments)dep.path=null;dirty=true};$('#basemap').onchange=()=>{updateBasemapAttribution();dirty=true};for(const id of ['hydroDams','nuclearPlants','flowsLayer','protectedLayer','aquiferLayer'])$('#'+id).onchange=()=>{if($('#'+id).checked)loadExtraData().catch(error=>{$('#layerInfo').textContent=error.message});if(id==='flowsLayer')$('#flowFilter').disabled=!$('#flowsLayer').checked;if(id==='protectedLayer'){$('#protectedFilter').disabled=!$('#protectedLayer').checked;if(EX&&!$('#protectedLayer').checked)for(const x of EX.protected){x.path=null;x.box=null}}if(EX&&id==='aquiferLayer'&&!$('#aquiferLayer').checked)for(const x of EX.aquifers){x.path=null;x.box=null}if(id==='departments'&&!$('#departments').checked)for(const x of departments)x.path=null;updateOverlayInfo();dirty=true};$('#flowFilter').onchange=()=>{updateOverlayInfo();dirty=true};$('#protectedFilter').onchange=()=>{updateOverlayInfo();dirty=true};$('#flowFilter').disabled=!$('#flowsLayer').checked;$('#protectedFilter').disabled=!$('#protectedLayer').checked;updateBasemapAttribution();function updateBasemapAttribution(){const value=$('#basemap').value,el=$('#mapAttribution');el.hidden=value==='none';el.innerHTML=value==='ign'?'© <a href="https://geoservices.ign.fr/" target="_blank" rel="noopener">IGN · Géoportail</a>':value.startsWith('osm')?'© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a> · <a href="https://www.openstreetmap.org/fixthemap" target="_blank" rel="noopener">Signaler une erreur</a>':''}function updateOverlayInfo(){let info=[];if($('#hydroDams').checked&&EX)info.push(EX.dams.length.toLocaleString('fr-FR')+' ouvrages ROE · usage hydroélectricité');if($('#nuclearPlants').checked&&EX)info.push(EX.nuclear.length+' centrales EDF · données du registre');if($('#flowsLayer').checked&&EX){let n=EX.flows.filter(x=>flowInFilter(x.q)).length;info.push(n.toLocaleString('fr-FR')+' stations · instantané du 26 oct. 2026, 16 h 50–17 h Paris · m³/s')}if($('#protectedLayer').checked&&EX){let k=$('#protectedFilter').value;info.push(EX.protected.filter(x=>k==='all'||x.kind===k||k==='reserves'&&['rnn','rnr','rnc'].includes(x.kind)).length.toLocaleString('fr-FR')+' périmètres INPN · filtre par catégorie')}if($('#aquiferLayer').checked&&EX)info.push(EX.aquifers.length+' entités captives · BD LISA');$('#layerInfo').textContent=info.length?info.join(' · '):(['hydroDams','nuclearPlants','flowsLayer','protectedLayer','aquiferLayer'].some(id=>$('#'+id).checked)&&!EX?'Chargement des données des surcouches…':'Couches ponctuelles et emprises officielles ; cliquer un symbole ou une zone pour les détails.') }updateOverlayInfo();$('#density').oninput=()=>{$('#densityLabel').textContent=['Principal','Intermédiaire','Détaillé','Très fin'][+$('#density').value];dirty=true};function playLabel(){$('#play').innerHTML=playing?'Ⅱ <span>Pause</span>':'▶ <span>Animer</span>'}$('#play').onclick=()=>{playing=!playing;flowDirty=true;playLabel()};$('#speed').onchange=()=>speed=+$('#speed').value;$('#clear').onclick=()=>{selected=null;$('#detail').replaceChildren(node('h2','Explorer le réseau'),node('p','Cliquez sur une rivière ou recherchez son nom pour afficher ses informations.'));dirty=true};$('#about').onclick=()=>$('#sources').showModal();$('#closeDialog').onclick=()=>$('#sources').close();$('#count').textContent=D.rivers.length.toLocaleString('fr-FR')+' cours d’eau disponibles';basinButtons();selectRiver(selected);playLabel();resize();requestAnimationFrame(frame);
+const basinById = new Map(D.basins.map(item => [item.id, item]));
+const departmentById = new Map(departments.map(item => [item.code, item]));
+const riverById = new Map(D.rivers.map(item => [item.id, item]));
+const number = new Intl.NumberFormat('fr-FR', {maximumFractionDigits: 1});
+const discharge = new Intl.NumberFormat('fr-FR', {maximumFractionDigits: 4});
+const wantsMotion = matchMedia('(prefers-reduced-motion: reduce)');
+let selected = names.get('loire') || D.rivers[0];
+let basin = null, playing = !wantsMotion.matches, speed = 1, phase = 0;
+let zoom = 1, tx = 0, ty = 0, w = 0, h = 0, dpr = 1, scale = 1, ox = 0, oy = 0;
+let dirty = true, flowDirty = true, frameRequest = 0, lastFrame = 0, mapIsVisible = true;
+let drag = null, hoverTime = 0, animatedBranches = [], visible = [];
+const pointers = new Map();
+let EX = null, geography = null, topology = null;
+let highlightedCrossing = null, highlightedArea = null, localWatershed = null, locatedPoint = null;
+let flowPoints = [], clusters = [], plotted = [];
+const areaLayers = {protected:'protectedLayer', aquifer:'aquiferLayer'};
+const tileCache = new Map();
+const overviewNames = new Set(['loire','seine','rhone','garonne','rhin','meuse','allier','dordogne','saone','somme','adour','vilaine','golo']);
+const cityLabels = [
+  ['Paris',2.35,48.86], ['Lyon',4.84,45.76], ['Bordeaux',-.58,44.84], ['Nantes',-1.55,47.22],
+  ['Toulouse',1.44,43.6], ['Strasbourg',7.75,48.58], ['Lille',3.06,50.63], ['Marseille',5.37,43.3],
+  ['Rennes',-1.68,48.11], ['Dijon',5.04,47.32], ['Clermont-Ferrand',3.09,45.78], ['Ajaccio',8.74,41.92]
+];
+
+function node(tag, text, className) {
+  const element = document.createElement(tag);
+  if (text != null) element.textContent = text;
+  if (className) element.className = className;
+  return element;
+}
+
+function boundsOf(lines) {
+  const box = [Infinity, Infinity, -Infinity, -Infinity];
+  for (const line of lines) for (const [x, y] of line) {
+    box[0] = Math.min(box[0], x); box[1] = Math.min(box[1], y);
+    box[2] = Math.max(box[2], x); box[3] = Math.max(box[3], y);
+  }
+  return box;
+}
+const overlaps = (a,b) => a[0] <= b[2] && a[2] >= b[0] && a[1] <= b[3] && a[3] >= b[1];
+const contains = (b,p) => p[0] >= b[0] && p[0] <= b[2] && p[1] >= b[1] && p[1] <= b[3];
+const landBox = boundsOf(D.land.flat());
+for (const item of D.basins) item.box = boundsOf(item.polys.flat());
+const riverGrid = new Map();
+const gridSize = 54;
+function cellsFor(box, callback) {
+  for (let y = Math.floor(box[1]/gridSize); y <= Math.floor(box[3]/gridSize); y++) {
+    for (let x = Math.floor(box[0]/gridSize); x <= Math.floor(box[2]/gridSize); x++) callback(x+','+y);
+  }
+}
+for (const river of D.rivers) {
+  river.box = boundsOf(river.p);
+  cellsFor(river.box, key => {
+    if (!riverGrid.has(key)) riverGrid.set(key, []);
+    riverGrid.get(key).push(river);
+  });
+}
+for (const item of departments) item.box = boundsOf(item.polys.flat());
+const riverCounts = new Map();
+for (const item of D.rivers) riverCounts.set(item.b, (riverCounts.get(item.b) || 0) + 1);
+
+function invalidate() {
+  dirty = true;
+  if (!frameRequest && !document.hidden) frameRequest = requestAnimationFrame(renderFrame);
+}
+
+function resize() {
+  const rect = $('#mapbox').getBoundingClientRect();
+  if (!rect.width || !rect.height || (w === rect.width && h === rect.height)) return;
+  const center = w && h && zoom !== 1 ? world(w/2,h/2) : null;
+  w = rect.width; h = rect.height;
+  dpr = Math.min(devicePixelRatio || 1, 1.5);
+  canvas.width = flowCanvas.width = base.width = labelsLayer.width = Math.round(w*dpr);
+  canvas.height = flowCanvas.height = base.height = labelsLayer.height = Math.round(h*dpr);
+  const padding = w < 570 ? 22 : 52;
+  scale = Math.min((w-padding)/(landBox[2]-landBox[0]), (h-padding)/(landBox[3]-landBox[1]));
+  ox = (w-(landBox[0]+landBox[2])*scale)/2;
+  oy = (h-(landBox[1]+landBox[3])*scale)/2;
+  if (center) centerOn(center, zoom);
+  else { tx = 0; ty = 0; }
+  invalidate();
+}
+function transform(c) { c.setTransform(dpr*scale*zoom,0,0,dpr*scale*zoom,dpr*(ox+tx),dpr*(oy+ty)); }
+function world(x,y) { return [(x-ox-tx)/(scale*zoom),(y-oy-ty)/(scale*zoom)]; }
+function screenPoint([x,y]) { return [ox+tx+x*scale*zoom,oy+ty+y*scale*zoom]; }
+function viewBox(margin = 0) { return [...world(-margin,-margin), ...world(w+margin,h+margin)]; }
+function maxZoom() { return 24; }
+function centerOn(point, magnification) {
+  zoom = Math.min(maxZoom(), Math.max(1, magnification));
+  tx = w/2-ox-point[0]*scale*zoom;
+  ty = h/2-oy-point[1]*scale*zoom;
+  invalidate();
+}
+function revealMap() {
+  if (matchMedia('(max-width: 760px)').matches) $('#mapbox').scrollIntoView({block:'nearest'});
+}
+function frameBounds(box) {
+  const padding = 82;
+  const magnification = Math.min((w-padding)/(Math.max(1,box[2]-box[0])*scale),
+    (h-padding)/(Math.max(1,box[3]-box[1])*scale));
+  centerOn([(box[0]+box[2])/2,(box[1]+box[3])/2],magnification);
+  revealMap();
+}
+function zoomAt(factor,x=w/2,y=h/2) {
+  const old = zoom;
+  zoom = Math.max(1,Math.min(maxZoom(),old*factor));
+  tx = x-ox-(x-ox-tx)*zoom/old;
+  ty = y-oy-(y-oy-ty)*zoom/old;
+  invalidate();
+}
+function resetMap() { zoom = 1; tx = ty = 0; invalidate(); }
+function setText(element, value) { if (element.textContent !== value) element.textContent = value; }
+
+function drawTiles(c, style, box) {
+  const a = unproject(box.slice(0,2)), b = unproject(box.slice(2));
+  const z = Math.max(2, Math.min(17, Math.round(Math.log2(scale*zoom*72*360/256))));
+  const n = 2**z;
+  const tileX = lon => Math.floor((lon+180)/360*n);
+  const tileY = lat => Math.floor((180-mercatorDegrees(lat))/360*n);
+  c.save();
+  c.globalAlpha = style==='osm' ? .82 : style==='osm-muted' ? .48 : .75;
+  c.filter = style==='osm-muted' ? 'grayscale(1)' : 'none';
+  for (let y = Math.max(0,tileY(a[1])); y <= Math.min(n-1,tileY(b[1])); y++) {
+    for (let x = Math.max(0,tileX(a[0])); x <= Math.min(n-1,tileX(b[0])); x++) {
+      const tile = z+'/'+x+'/'+y;
+      const key = (style==='ign'?'ign':'osm')+'/'+tile;
+      if (!tileCache.has(key)) {
+        const image = new Image();
+        image.referrerPolicy = 'strict-origin-when-cross-origin';
+        tileCache.set(key,image);
+        image.onload = () => { if ($('#basemap').value === style) invalidate(); };
+        image.onerror = () => { if (tileCache.has(key)) tileCache.set(key,null); };
+        image.src = style==='ign'
+          ? 'https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&STYLE=normal&FORMAT=image/png&TILEMATRIXSET=PM&TILEMATRIX='+z+'&TILEROW='+y+'&TILECOL='+x
+          : 'https://tile.openstreetmap.org/'+tile+'.png';
+      }
+      const image = tileCache.get(key);
+      if (!image?.naturalWidth) continue;
+      const tileSize = 72*360/n;
+      const left = (x/n*360-180+5.4)*72;
+      const top = 494-(180-y/n*360-centerMercator)*72;
+      c.drawImage(image,left,top,tileSize+.04,tileSize+.04);
+    }
+  }
+  while (tileCache.size>96) tileCache.delete(tileCache.keys().next().value);
+  c.restore();
+}
+
+function linePath(line) {
+  const path = new Path2D();
+  line.forEach((point,index) => index ? path.lineTo(...point) : path.moveTo(...point));
+  return path;
+}
+function drawRiver(c,river) {
+  c.beginPath();
+  for (const line of river.p) {
+    if (!line.length) continue;
+    c.moveTo(...line[0]);
+    for (let i=1;i<line.length;i++) c.lineTo(...line[i]);
+  }
+  c.stroke();
+}
+function threshold() { return [38,15,5,1.8][+$('#density').value]/Math.max(1,zoom*.8); }
+function visibleRivers(box) {
+  const pool = new Set();
+  cellsFor(box,key => { for (const river of riverGrid.get(key) || []) pool.add(river); });
+  const minimum = threshold();
+  return [...pool].filter(r => overlaps(box,r.box) && (r === selected || r.l >= minimum)).sort((a,b) => a.l-b.l);
+}
+function outline(c, item, color, width, dash=[]) {
+  if (!item.path) item.path = polyPath(item.polys);
+  c.strokeStyle=color; c.lineWidth=width; c.setLineDash(dash); c.stroke(item.path); c.setLineDash([]);
+}
+function drawArea(c,item,fill,stroke,s) {
+  if (!item.path) item.path = polyPath(item.polys);
+  c.fillStyle=fill; c.fill(item.path,'evenodd');
+  outline(c,item,stroke,.65/s);
+}
+function drawStatic() {
+  bc.setTransform(1,0,0,1,0,0);
+  bc.clearRect(0,0,base.width,base.height);
+  const style = $('#basemap').value;
+  if (style !== 'positron' || !vectorReady) {
+    bc.fillStyle='#fff'; bc.fillRect(0,0,base.width,base.height);
+  }
+  transform(bc);
+  const s = scale*zoom, box = viewBox(12);
+  if (style === 'positron') syncPositron();
+  else if (style !== 'none') drawTiles(bc,style,box);
+  bc.strokeStyle='#a9b6bd'; bc.lineWidth=.8/s; bc.stroke(landPath);
+
+  if ($('#areas').checked) for (const b of D.basins) {
+    if (basin && basin!==b.id) continue;
+    bc.fillStyle=colors[b.id]+'13'; bc.fill(b.path,'evenodd');
+  }
+  if (EX) for (const [type,id] of Object.entries(areaLayers)) {
+    if (!$('#'+id).checked) continue;
+    const entries = type==='aquifer' ? EX.aquifers : EX.protected;
+    for (const item of entries) {
+      if (type==='protected' && !protectedInFilter(item)) continue;
+      if (!overlaps(item.box,box)) continue;
+      const aqua = type==='aquifer';
+      drawArea(bc,item,aqua?'#287bbc29':'#25764630',aqua?'#287bbc9c':'#217144a6',s);
+    }
+  }
+  if (localWatershed) drawArea(bc,localWatershed,'#244eaa22','#284d9c',s);
+  if (highlightedCrossing) drawArea(bc,highlightedCrossing,colors[highlightedCrossing.basin]+'48',colors[highlightedCrossing.basin],s);
+
+  visible = visibleRivers(box);
+  for (const river of visible) {
+    if (river===selected) continue;
+    const isRelevant = !basin || river.b===basin;
+    bc.globalAlpha = isRelevant ? (river.l>100?.99:river.l>35?.74:.44) : .10;
+    bc.strokeStyle = colors[river.b];
+    bc.lineWidth = (river.l>350?1.8:river.l>100?1.22:river.l>35?.80:.46)/Math.pow(s,.91);
+    drawRiver(bc,river);
+  }
+  bc.globalAlpha=1;
+  if (selected) {
+    const route = currentRoute(selected);
+    if (route?.full?.length) {
+      route.path ||= linePath(route.full);
+      bc.strokeStyle='#ffffffdf'; bc.lineWidth=4.8/s; bc.stroke(route.path);
+      bc.strokeStyle=colors[selected.b]; bc.lineWidth=2.75/s; bc.stroke(route.path);
+    } else {
+      bc.strokeStyle=colors[selected.b]; bc.lineWidth=2.6/s; drawRiver(bc,selected);
+    }
+    if (highlightedArea) {
+      bc.save();
+      highlightedArea.item.path ||= polyPath(highlightedArea.item.polys);
+      bc.clip(highlightedArea.item.path,'evenodd');
+      bc.strokeStyle=highlightedArea.type==='protected'?'#174f2f':'#185d95';
+      bc.lineWidth=4/s;
+      if (route?.path) bc.stroke(route.path); else drawRiver(bc,selected);
+      bc.restore();
+    }
+  }
+
+  lc.setTransform(1,0,0,1,0,0);
+  lc.clearRect(0,0,labelsLayer.width,labelsLayer.height);
+  transform(lc);
+  if ($('#basinBoundaries').checked) for (const b of D.basins) {
+    if (overlaps(b.box,box)) outline(lc,b,colors[b.id]+(basin&&b.id!==basin?'45':'cb'),1.15/s);
+  }
+  if ($('#departments').checked) for (const item of departments) {
+    if (overlaps(item.box,box)) outline(lc,item,'#17191d',.8/s);
+  }
+  if ($('#regions').checked && geography) for (const item of geography.regions) {
+    if (overlaps(item.box,box)) outline(lc,item,'#3b4654',1.65/s,[5/s,3/s]);
+  }
+  drawLabels(lc);
+  drawPoints(lc);
+
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.drawImage(base,0,0);
+  ctx.drawImage(labelsLayer,0,0);
+  const count = visible.filter(r => !basin || r.b===basin).length;
+  setText($('#visibleCount'),number.format(count)+' cours d’eau dans la vue');
+  updateScale();
+  updateLegend();
+  updateBranches();
+  dirty=false; flowDirty=true;
+}
+
+function updateScale() {
+  const [,lat] = unproject(world(w/2,h/2));
+  const kmPerPixel = 111.32*Math.cos(lat*Math.PI/180)/(72*scale*zoom);
+  const target = Math.max(.01,kmPerPixel*84);
+  const pow = 10**Math.floor(Math.log10(target));
+  const km = (target/pow>=5?5:target/pow>=2?2:1)*pow;
+  const el = $('#mapScale');
+  el.style.width = km/kmPerPixel+'px';
+  setText(el,km<1 ? number.format(km*1000)+' m' : number.format(km)+' km');
+}
+function drawLabels(c) {
+  c.setTransform(dpr,0,0,dpr,0,0);
+  const placed = [];
+  function label(text,point,color,size,mark=false) {
+    const [x,y]=screenPoint(point);
+    c.font = (mark?'550 ':'600 ')+size+'px Inter, sans-serif';
+    const width=c.measureText(text).width, box=[x+3,y-size-4,x+width+8,y+3];
+    if (x<4 || x>w-12 || y<12 || y>h-14) return false;
+    if (mark) {
+      c.beginPath(); c.arc(x,y,2.45,0,Math.PI*2); c.fillStyle=color; c.fill();
+      c.lineWidth=1.2; c.strokeStyle='#fff'; c.stroke();
+    }
+    if (box[2]>w-5 || placed.some(b=>overlaps(b,box))) return false;
+    placed.push(box);
+    c.lineJoin='round'; c.lineWidth=3.4; c.strokeStyle='#ffffffeb';
+    c.strokeText(text,x+5,y-4);
+    c.fillStyle=color; c.fillText(text,x+5,y-4);
+    return true;
+  }
+  if ($('#cities').checked) {
+    const candidates = [...visible].reverse().filter(r => {
+      if (basin && r.b!==basin) return false;
+      if (zoom<1.45) return overviewNames.has(r.key) && names.get(r.key)===r;
+      return r.l>150/Math.max(1,zoom*.65);
+    }).slice(0,140);
+    if (selected) candidates.unshift(selected);
+    const used=new Set();
+    for (const r of candidates) {
+      if (r.n==='Cours d’eau sans nom' || used.has(r.n)) continue;
+      const line=r.route?.line || r.p.reduce((a,b)=>a.length>b.length?a:b,[]);
+      const p=line[Math.floor(line.length/2)];
+      if (p && label(displayName(r.n),p,colors[r.b],r===selected?13:11)) used.add(r.n);
+    }
+  }
+  if ($('#prefectures').checked) {
+    const major = new Set(cityLabels.map(x=>x[0]));
+    const ordered = [...departments].sort((a,b)=>Number(major.has(b.chief))-Number(major.has(a.chief)));
+    for (const d of ordered) {
+      if ((zoom<1.8 && !major.has(d.chief)) || ($('#basemap').value==='positron' && zoom<2.75)) {
+        const [x,y]=screenPoint(d.point);
+        c.beginPath(); c.arc(x,y,1.6,0,Math.PI*2); c.fillStyle='#536170'; c.fill();
+      } else label(d.chief+(zoom>=3?' · '+d.code:''),d.point,'#354252',11,true);
+    }
+  }
+  if ($('#basemap').value==='none' && zoom<2.1) {
+    for (const [name,lon,lat] of [['La Manche',-3.1,49.55],['Océan Atlantique',-4.5,45.4],['Méditerranée',5.7,42.15]]) {
+      label(name,project(lon,lat),'#637c8a',11);
+    }
+  }
+}
+
+function protectedInFilter(item) {
+  const filter=$('#protectedFilter').value;
+  return filter==='all'||filter===item.kind||(filter==='reserves'&&['rnn','rnr','rnc'].includes(item.kind));
+}
+function flowInFilter(item,box) {
+  const scope=$('#flowScope').value;
+  if (scope==='auto' && basin && !item.basins.includes(basin)) return false;
+  if (scope==='view' && !contains(box,item.p)) return false;
+  const value=$('#flowFilter').value;
+  if (value==='all') return true;
+  if (value==='negative') return item.q<0;
+  const [min,max]=value.split(':').slice(1).map(Number);
+  return item.q>=min && item.q<max;
+}
+function drawPoints(c) {
+  const box=viewBox(10);
+  c.setTransform(dpr,0,0,dpr,0,0);
+  plotted=[]; clusters=[]; flowPoints=[];
+  function marker(type,item,color,radius,shape='circle') {
+    const [x,y]=screenPoint(item.p);
+    c.beginPath();
+    if (shape==='circle') c.arc(x,y,radius,0,Math.PI*2);
+    else {c.moveTo(x,y-radius);c.lineTo(x+radius,y);c.lineTo(x,y+radius);c.lineTo(x-radius,y);c.closePath();}
+    c.fillStyle=color;c.fill();c.lineWidth=1.5;c.strokeStyle='#fff';c.stroke();
+    plotted.push({type,item,p:[x,y],radius:Math.max(9,radius+3)});
+  }
+  if (EX && $('#hydroDams').checked) {
+    const cells=new Map();
+    for (const item of EX.dams) {
+      if (!contains(box,item.p)) continue;
+      const [x,y]=screenPoint(item.p);
+      const key=Math.floor(x/20)+':'+Math.floor(y/20);
+      if (!cells.has(key)) cells.set(key,[]);
+      cells.get(key).push(item);
+    }
+    for (const items of cells.values()) {
+      if (items.length===1) { marker('dam',items[0],'#3f6f9c',4.7,'diamond'); continue; }
+      const [x,y]=screenPoint(items[0].p);
+      c.beginPath();c.arc(x,y,8.5,0,Math.PI*2);c.fillStyle='#365f86';c.fill();c.strokeStyle='#fff';c.lineWidth=1.25;c.stroke();
+      c.font='600 9px Inter';c.textAlign='center';c.textBaseline='middle';c.fillStyle='#fff';c.fillText(items.length>99?'99+':items.length,x,y);
+      clusters.push({p:[x,y],items});
+    }
+    c.textAlign='start';c.textBaseline='alphabetic';
+  }
+  if (EX && $('#nuclearPlants').checked) for (const item of EX.nuclear) {
+    if (contains(box,item.p)) marker('nuclear',item,'#936213',5.7,'diamond');
+  }
+  if (EX && $('#flowsLayer').checked) {
+    const filterBox = viewBox();
+    flowPoints=EX.flows.filter(item=>flowInFilter(item,filterBox));
+    for (const item of flowPoints) {
+      if (!contains(box,item.p)) continue;
+      const positive=Math.max(0,item.q);
+      marker('flow',item,'#087f82',Math.min(7,3.1+Math.log10(1+positive)*1.4));
+    }
+  }
+  if (locatedPoint) {
+    const [x,y]=screenPoint(locatedPoint);
+    c.beginPath();c.arc(x,y,8,0,Math.PI*2);c.fillStyle='#ffffffd9';c.fill();c.lineWidth=2.2;c.strokeStyle='#152b52';c.stroke();
+    c.beginPath();c.arc(x,y,2.6,0,Math.PI*2);c.fillStyle='#152b52';c.fill();
+  }
+}
+
+function prepareFlow(line) {
+  const cum = new Float32Array(line.length);
+  for (let i=1;i<line.length;i++) cum[i]=cum[i-1]+Math.sqrt(dist2(line[i-1],line[i]));
+  return {line,cum,total:cum.at(-1)||0};
+}
+const flowCache=new Map();
+function flowParts(river) {
+  if (flowCache.has(river)) {
+    const cached=flowCache.get(river);
+    flowCache.delete(river);flowCache.set(river,cached);
+    return cached;
+  }
+  const parts=[];
+  river.p.forEach((line,index)=>{
+    if (line.length<2) return;
+    const signs=river.o?.[index] || '+'.repeat(line.length-1);
+    let start=0;
+    for (let i=1;i<=line.length-1;i++) {
+      if (i!==line.length-1 && signs[i]===signs[start]) continue;
+      const part=line.slice(start,i+1);
+      if (signs[start]==='-') part.reverse();
+      parts.push(prepareFlow(part));
+      start=i;
+    }
+  });
+  flowCache.set(river,parts);
+  if (flowCache.size>3600) flowCache.delete(flowCache.keys().next().value);
+  return parts;
+}
+function updateBranches() {
+  animatedBranches=[];
+  if (!playing) return;
+  const s=scale*zoom, eligible=visible.filter(r=>!basin||r.b===basin);
+  const step=Math.max(1,Math.ceil(eligible.length/1250));
+  const offset=Math.floor(phase/700)%step;
+  let budget=2200;
+  for (let i=eligible.length-1-offset;i>=0 && budget>0;i-=step) {
+    const r=eligible[i];
+    for (const f of flowParts(r)) {
+      if (f.total*s<1.6||budget<=0) continue;
+      const count=Math.min(8,Math.ceil(f.total*s/55),budget);
+      animatedBranches.push({r,f,count});
+      budget-=count;
+    }
+  }
+}
+function drawParticle(c,flow,position,radius,color,highlight=false) {
+  if (!flow.total) return;
+  const distance=position%flow.total;
+  let lo=0,hi=flow.cum.length-1;
+  while(lo<hi) {const mid=(lo+hi)>>1;if(flow.cum[mid]<distance) lo=mid+1;else hi=mid;}
+  const i=Math.max(1,lo), a=flow.line[i-1],b=flow.line[i];
+  const ratio=(distance-flow.cum[i-1])/(flow.cum[i]-flow.cum[i-1]||1);
+  const x=a[0]+ratio*(b[0]-a[0]), y=a[1]+ratio*(b[1]-a[1]);
+  c.beginPath();c.arc(x,y,radius,0,Math.PI*2);c.fillStyle=color;c.fill();
+  if (highlight) {
+    c.beginPath();c.arc(x,y,.52*radius,0,Math.PI*2);c.fillStyle='#fff';c.fill();
+  }
+}
+function renderFrame(time) {
+  frameRequest=0;
+  if (document.hidden || !w || !h) return;
+  const interval=drag ? 1000/16 : 1000/28;
+  const animate=playing && mapIsVisible;
+  if ((dirty && !drag) || ((animate || dirty) && time-lastFrame>=interval) || flowDirty) {
+    const s=scale*zoom,elapsed=lastFrame?Math.min(70,time-lastFrame):interval;
+    lastFrame=time;
+    if (animate) phase+=elapsed*.019*speed/s;
+    if (dirty) drawStatic();
+    fx.setTransform(1,0,0,1,0,0);fx.clearRect(0,0,flowCanvas.width,flowCanvas.height);
+    flowDirty=false;
+    if (animate) {
+      transform(fx);
+      fx.globalAlpha=.93;
+      for (const {r,f,count} of animatedBranches) for (let i=0;i<count;i++) {
+        drawParticle(fx,f,phase+i*f.total/count+r.i*.37,(zoom>2?1.5:1.2)/s,colors[r.b],true);
+      }
+      const route=selected&&currentRoute(selected);
+      if (route?.full?.length) {
+        const f=route.flow ||= prepareFlow(route.full);
+        const step=Math.max(36/s,f.total/190);
+        for (let p=0;p<f.total;p+=step) drawParticle(fx,f,phase+p,1.3/s,'#fff');
+      }
+    }
+  }
+  if (animate || dirty || flowDirty) frameRequest=requestAnimationFrame(renderFrame);
+}
+
+function pointToSegment(p,a,b) {
+  const dx=b[0]-a[0],dy=b[1]-a[1];
+  const ratio=Math.max(0,Math.min(1,((p[0]-a[0])*dx+(p[1]-a[1])*dy)/(dx*dx+dy*dy||1)));
+  return dist2(p,[a[0]+ratio*dx,a[1]+ratio*dy]);
+}
+function nearestRiver(point,tolerance) {
+  const neighborhood = [point[0]-tolerance,point[1]-tolerance,point[0]+tolerance,point[1]+tolerance];
+  const candidates=new Set();
+  cellsFor(neighborhood,key=>{for(const r of riverGrid.get(key)||[]) candidates.add(r);});
+  let best=tolerance*tolerance,river=null;
+  for (const r of candidates) {
+    if ((basin&&r.b!==basin) || (r!==selected&&r.l<threshold()) || !overlaps(r.box,neighborhood)) continue;
+    for (const line of r.p) for (let i=1;i<line.length;i++) {
+      const d=pointToSegment(point,line[i-1],line[i]);
+      if (d<best) {best=d;river=r;}
+    }
+  }
+  return river;
+}
+function inside(item,point) {
+  if (!contains(item.box,point)) return false;
+  item.path ||= polyPath(item.polys);
+  hitContext.setTransform(1,0,0,1,0,0);
+  return hitContext.isPointInPath(item.path,...point,'evenodd');
+}
+const hitContext=document.createElement('canvas').getContext('2d');
+
+function clickOptions(x,y,includeTerritories=true) {
+  const p=world(x,y), screen=[x,y], hits=[];
+  const nearby = plotted.filter(hit=>dist2(hit.p,screen)<=hit.radius**2).sort((a,b)=>dist2(a.p,screen)-dist2(b.p,screen));
+  for (const hit of nearby.slice(0,4)) hits.push(hit);
+  for (const group of clusters) if (dist2(group.p,screen)<=110) hits.push({type:'cluster',item:group});
+  const r=nearestRiver(p,7/(scale*zoom));
+  if (r) hits.push({type:'river',item:r});
+  if ($('#prefectures').checked) for(const d of departments) {
+    if (dist2(screenPoint(d.point),screen)<45) hits.push({type:'department',item:d});
+  }
+  if (!includeTerritories) return hits;
+  if (EX && $('#protectedLayer').checked) for (const item of EX.protected) {
+    if (protectedInFilter(item)&&inside(item,p)) hits.push({type:'protected',item});
+  }
+  if (EX && $('#aquiferLayer').checked) for (const item of EX.aquifers) {
+    if (inside(item,p)) hits.push({type:'aquifer',item});
+  }
+  if ($('#departments').checked) for (const item of departments) {
+    if (!hits.some(h=>h.item===item)&&inside(item,p)) hits.push({type:'department',item});
+  }
+  if (geography && $('#regions').checked) for (const item of geography.regions) {
+    if (inside(item,p)) hits.push({type:'region',item});
+  }
+  return hits;
+}
+
+function relative(event) {
+  const rect=canvas.getBoundingClientRect();
+  return [event.clientX-rect.left,event.clientY-rect.top];
+}
+canvas.addEventListener('pointerdown',event=>{
+  if (event.button!==0) return;
+  canvas.setPointerCapture(event.pointerId);
+  const point=relative(event);
+  pointers.set(event.pointerId,point);
+  if (pointers.size===2) {
+    const [a,b]=pointers.values();
+    drag={moved:true,pinch:Math.sqrt(dist2(a,b)),center:[(a[0]+b[0])/2,(a[1]+b[1])/2]};
+  } else drag={point,tx,ty,moved:false};
+  $('#tooltip').hidden=true;
+  closeChoices();
+});
+canvas.addEventListener('pointermove',event=>{
+  const point=relative(event);
+  if (drag && pointers.has(event.pointerId)) {
+    pointers.set(event.pointerId,point);
+    if (pointers.size>=2) {
+      const [a,b]=pointers.values(), length=Math.sqrt(dist2(a,b));
+      const center=[(a[0]+b[0])/2,(a[1]+b[1])/2];
+      if (drag.pinch>0) {
+        zoomAt(length/drag.pinch,...drag.center);
+        tx+=center[0]-drag.center[0];ty+=center[1]-drag.center[1];
+      }
+      drag={moved:true,pinch:length,center};
+    } else {
+      const dx=point[0]-drag.point[0],dy=point[1]-drag.point[1];
+      if (Math.abs(dx)+Math.abs(dy)>4) drag.moved=true;
+      if (drag.moved) {tx=drag.tx+dx;ty=drag.ty+dy;}
+    }
+    invalidate();
+    return;
+  }
+  if (performance.now()-hoverTime<110) return;
+  hoverTime=performance.now();
+  const [hit]=clickOptions(...point,false), tip=$('#tooltip');
+  tip.hidden=!hit;
+  if (!hit) {canvas.style.cursor='grab';return;}
+  tip.textContent=hitLabel(hit);
+  tip.style.left=Math.max(6,Math.min(w-190,point[0]+10))+'px';
+  tip.style.top=Math.max(5,point[1]-32)+'px';
+  canvas.style.cursor='pointer';
+});
+function pointerEnd(event) {
+  if (!pointers.has(event.pointerId)) return;
+  const point=relative(event), moved=drag?.moved;
+  pointers.delete(event.pointerId);
+  if (pointers.size===1) drag={point:[...pointers.values()][0],tx,ty,moved:true};
+  else drag=null;
+  if (event.type==='pointerup'&&!moved&&!pointers.size) inspectMapClick(...point);
+  invalidate();
+}
+canvas.addEventListener('pointerup',pointerEnd);
+canvas.addEventListener('pointercancel',pointerEnd);
+canvas.addEventListener('pointerleave',()=>{$('#tooltip').hidden=true;});
+canvas.addEventListener('wheel',event=>{
+  event.preventDefault();closeChoices();zoomAt(event.deltaY>0?.88:1.14,...relative(event));
+},{passive:false});
+canvas.addEventListener('keydown',event=>{
+  const actions={'+':()=>zoomAt(1.3),'=':()=>zoomAt(1.3),'-':()=>zoomAt(1/1.3),Home:resetMap,
+    ArrowLeft:()=>{tx+=45;},ArrowRight:()=>{tx-=45;},ArrowUp:()=>{ty+=45;},ArrowDown:()=>{ty-=45;}};
+  if (!actions[event.key]) return;
+  event.preventDefault();actions[event.key]();closeChoices();invalidate();
+});
+document.addEventListener('visibilitychange',()=>{
+  if (!document.hidden) {lastFrame=0;invalidate();}
+  else if (frameRequest) {cancelAnimationFrame(frameRequest);frameRequest=0;}
+});
+new ResizeObserver(resize).observe($('#mapbox'));
+new IntersectionObserver(([entry])=>{
+  if (entry.isIntersecting===mapIsVisible) return;
+  mapIsVisible=entry.isIntersecting;
+  lastFrame=0;flowDirty=true;invalidate();
+}).observe($('#mapbox'));
+document.fonts.ready.then(invalidate);
+initExplorer();
+resize();

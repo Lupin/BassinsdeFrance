@@ -17,3 +17,5 @@ La police **Inter**, fournie dans `outputs/au-fil-de-leau/dist/assets/`, est dis
 ## Fonds de carte en ligne
 
 Les fonds IGN et OpenStreetMap sont chargés depuis leurs services respectifs lorsque l’utilisateur les active. Ils ne sont pas couverts par la licence MIT du projet ; leurs crédits et conditions d’utilisation sont accessibles depuis le pied de page de la carte.
+
+Le fond **Positron** est chargé depuis l’instance publique [OpenFreeMap](https://openfreemap.org/quick_start/). Il utilise les données d’[OpenStreetMap](https://www.openstreetmap.org/copyright) et le schéma d’[OpenMapTiles](https://openmaptiles.org/). Les crédits sont affichés sur la carte. Les noms français ou locaux sont privilégiés, et le style laisse à l’atlas l’affichage du nom des cours d’eau. Le moteur [MapLibre GL JS](https://github.com/maplibre/maplibre-gl-js) est chargé uniquement lorsque ce fond est sélectionné.
