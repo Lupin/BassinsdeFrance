@@ -2,6 +2,7 @@
 
 const waterTransportLayers = {
   lakes: {color:'#147a9a', label:'Plan d’eau'},
+  captages: {color:'#075b8f', label:'Captage d’eau potable'},
   navigation: {color:'#50218a', label:'Voie navigable'},
   locks: {color:'#976024', label:'Écluse'},
   wastewater: {color:'#04746f', label:'Station d’épuration'},
@@ -13,6 +14,10 @@ function prepareWaterLayer(key, records) {
     if (key === 'lakes') {
       const polys = geometry.map(polygon => polygon.map(ring => ring.map(p => project(...p))));
       return {n, hectares:value, polys, box:boundsOf(polys.flat())};
+    }
+    if (key === 'captages') {
+      const point = project(...value);
+      return {n, id:geometry, commune:detail, point, box:[...point,...point]};
     }
     if (key === 'navigation') {
       const line = value.map(p => project(...p));
@@ -115,6 +120,7 @@ function drawWaterTransport(c, box, s, points = false) {
     return;
   }
   drawWastewater(c, box, s);
+  drawCaptages(c, box, s);
   drawIndustry(c, box, s);
   // Keep locks legible at national scale by drawing one symbol per screen cell.
   const cells = new Set();
@@ -158,6 +164,16 @@ function drawWastewater(c, box, s) {
   c.stroke();
 }
 
+let plottedCaptages = [];
+function drawCaptages(c, box, s) {
+  plottedCaptages = selectPointMarkers('captages', box, s, () => 0);
+  if (!plottedCaptages.length) return;
+  c.beginPath();
+  for (const {point:[x,y]} of plottedCaptages) { c.moveTo(x+3.5/s,y); c.arc(x,y,3.5/s,0,Math.PI*2); }
+  c.fillStyle=waterTransportLayers.captages.color; c.fill();
+  c.strokeStyle='#fff'; c.lineWidth=.9/s; c.stroke();
+}
+
 let plottedIndustry = [];
 function drawIndustry(c, box, s) {
   plottedIndustry = selectPointMarkers('industry', box, s, item => item.seuil);
@@ -195,12 +211,16 @@ function waterTransportHits(point, tolerance) {
   const station = $('#water-wastewater').checked && plottedWastewater
     .filter(item => dist2(point,item.point) <= distance)
     .sort((a,b) => dist2(a.point,point) - dist2(b.point,point))[0];
+  const captage = $('#water-captages').checked && plottedCaptages
+    .filter(item => dist2(point,item.point) <= distance)
+    .sort((a,b) => dist2(a.point,point) - dist2(b.point,point))[0];
   const installation = $('#water-industry').checked && plottedIndustry
     .filter(item => dist2(point,item.point) <= distance)
     .sort((a,b) => dist2(a.point,point) - dist2(b.point,point))[0];
   return [
     ...(installation ? [{type:'industry', item:installation}] : []),
     ...(station ? [{type:'wastewater', item:station}] : []),
+    ...(captage ? [{type:'captage', item:captage}] : []),
     ...locks.map(item => ({type:'locks', item})),
     ...routes.slice(0, 1).map(item => ({type:'navigation', item})),
     ...lakes.slice(0, 1).map(item => ({type:'lakes', item}))

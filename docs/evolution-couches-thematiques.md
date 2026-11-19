@@ -62,6 +62,8 @@ Pour régénérer la couche, utiliser `python work/build-watersheds.py /chemin/B
 
 ## Eau et inondations
 
+- **Captages d’eau potable.** La couche utilise les ouvrages validés du [référentiel Sandre PRL](https://www.data.gouv.fr/datasets/ouvrages-de-prelevement-france-entiere-1), millésime 2026, dont l’usage principal est AEP ou domestique (codes 5 et sous-niveaux). L’export intégré contient 43 357 points en métropole. Il localise les ouvrages recensés, sans indiquer leur activité instantanée ni leur débit.
+
 - Lacs, avec distinction entre plans d’eau naturels et artificiels si la source le permet.
 - Captages d’eau potable, d’après les données autorisées à la diffusion. Aucun libellé correspondant n’a été trouvé dans l’interface actuelle. Vérifier le contenu des données avant intégration.
 - Stations d’épuration.

@@ -95,9 +95,10 @@
             </select>
           </div>
           <label class="check"><input type="checkbox" id="aquiferLayer"> Nappes captives <span id="aquiferCount" class="layer-count"></span></label>
-          <label class="check"><input type="checkbox" id="watersheds" aria-describedby="watershedHelp"> Limites des sous-bassins <span id="watershedStatus" class="layer-count" role="status"></span></label>
-          <p id="watershedHelp" class="sidebar-note" hidden>Les contours se précisent au zoom. Choisissez un point sur la carte pour identifier son sous-bassin.</p>
+          <label class="check"><input type="checkbox" id="watersheds" aria-describedby="watershedHelp"> Sous-bassins topographiques · France entière <span id="watershedStatus" class="layer-count" role="status"></span></label>
+          <p id="watershedHelp" class="sidebar-note" hidden>Le découpage de tous les sous-bassins apparaît sur la carte. Cliquez sur un point pour afficher celui qui le contient.</p>
           <label class="check"><input type="checkbox" id="water-lakes"> <span class="layer-symbol area" style="--layer-color:#147a9a" aria-hidden="true"></span>Lacs et plans d’eau <span id="water-lakes-status" class="layer-count" role="status"></span></label>
+          <label class="check"><input type="checkbox" id="water-captages"> <span class="layer-symbol square" style="--layer-color:#075b8f" aria-hidden="true"></span>Captages d’eau potable <span id="water-captages-status" class="layer-count" role="status"></span></label>
         </fieldset>
         <fieldset class="layer-group">
           <legend>Navigation</legend>
@@ -188,6 +189,7 @@
       <a href="https://www.sandre.eaufrance.fr/v2/news/diffusion-du-millesime-2026-de-la-bd-topage-metropole" target="_blank" rel="noopener">BD TOPAGE® · IGN, OFB et Sandre</a>
       <a href="https://services.sandre.eaufrance.fr/geo/obs?SERVICE=WFS&amp;VERSION=2.0.0&amp;REQUEST=GetCapabilities" target="_blank" rel="noopener">Ouvrages sur les cours d’eau · ROE</a>
       <a href="https://www.data.gouv.fr/datasets/plans-deau-metropole-2026-bd-topage-r" target="_blank" rel="noopener">Plans d’eau · BD TOPAGE® 2026</a>
+      <a href="https://www.data.gouv.fr/datasets/ouvrages-de-prelevement-france-entiere-1" target="_blank" rel="noopener">Captages d’eau potable · Sandre PRL 2026</a>
       <a href="https://geoservices.ign.fr/bdcarto" target="_blank" rel="noopener">Voies navigables · BD CARTO® IGN</a>
       <a href="https://www.vnf.fr/vnf/services/navi/" target="_blank" rel="noopener">Conditions de navigation · VNF Navi</a>
       <a href="https://assainissement.developpement-durable.gouv.fr/pages/data/basededonneesteu.php" target="_blank" rel="noopener">Stations d’épuration · ERU 2024</a>
@@ -235,18 +237,19 @@
   <script id="topology-data-lazy" data-src="outputs/au-fil-de-leau/dist/topology-data.js?v=7bf8a986c663"></script>
   <script src="outputs/au-fil-de-leau/dist/data.js?v=c2253c4f7828" defer></script>
   <script src="outputs/au-fil-de-leau/dist/admin.js?v=7112a2af8e64" defer></script>
-  <script src="outputs/au-fil-de-leau/dist/explore.js?v=f5c7a997cc6b" defer></script>
+  <script src="outputs/au-fil-de-leau/dist/explore.js?v=33b220521ab7" defer></script>
   <script id="navigation-data-lazy" data-src="outputs/au-fil-de-leau/dist/navigation-data.js?v=3a6837842e35"></script>
   <script id="locks-data-lazy" data-src="outputs/au-fil-de-leau/dist/locks-data.js?v=10cac2e18688"></script>
   <script id="lakes-data-lazy" data-src="outputs/au-fil-de-leau/dist/lakes-data.js?v=b13b6d6bbe78"></script>
+  <script id="captages-data-lazy" data-src="outputs/au-fil-de-leau/dist/captages-data.js?v=a7f5ce6560dd"></script>
   <script id="wastewater-data-lazy" data-src="outputs/au-fil-de-leau/dist/wastewater-data.js?v=543bb5f5823d"></script>
   <script id="flood-overview-data-lazy" data-src="outputs/au-fil-de-leau/dist/flood-overview-data.js?v=5cef764efa0f"></script>
   <script src="outputs/au-fil-de-leau/dist/flood.js?v=00d973c94b35" defer></script>
   <script id="industry-data-lazy" data-src="outputs/au-fil-de-leau/dist/industry-data.js?v=85a4e1a7ba8d"></script>
-  <script src="outputs/au-fil-de-leau/dist/water-transport.js?v=8446d02683ad" defer></script>
+  <script src="outputs/au-fil-de-leau/dist/water-transport.js?v=1f99496d2d1f" defer></script>
   <script id="watersheds-overview-data-lazy" data-src="outputs/au-fil-de-leau/dist/watersheds-overview-data.js?v=5bd6abd7bd61"></script>
   <script id="watersheds-detail-data-lazy" data-src="outputs/au-fil-de-leau/dist/watersheds-detail-data.js?v=da02d682edc9"></script>
-  <script src="outputs/au-fil-de-leau/dist/watershed-layer.js?v=9561420d4804" defer></script>
+  <script src="outputs/au-fil-de-leau/dist/watershed-layer.js?v=291e7ca97189" defer></script>
   <script src="outputs/au-fil-de-leau/dist/app.js?v=0e676dee5038" defer></script>
 </body>
 </html>

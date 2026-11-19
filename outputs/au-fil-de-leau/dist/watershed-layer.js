@@ -50,8 +50,8 @@ function drawWatershedLimits(c,box,s) {
     item.path ||= polyPath(item.polys);
     path.addPath(item.path);
   }
-  c.strokeStyle = zoom >= 3 ? '#385b858f' : '#385b8569';
-  c.lineWidth = (zoom >= 3 ? .85 : .68) / s;
+  c.strokeStyle = zoom >= 3 ? '#263746c4' : '#34495aa8';
+  c.lineWidth = (zoom >= 3 ? .9 : .78) / s;
   c.stroke(path);
 }
 

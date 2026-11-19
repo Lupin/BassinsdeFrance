@@ -554,6 +554,9 @@ function showFeature({type,item}) {
       ['Capacité nominale',item.capacity == null ? 'Non renseignée' : number.format(item.capacity)+' EH'],
       ['Source','Base Eaux résiduaires urbaines · 2024']];
     note='EH signifie équivalent-habitant, une unité de dimensionnement du traitement.';
+  } else if (type==='captage') {
+    fields=[['Commune',item.commune],['Identifiant Sandre',item.id],['Source','Référentiel des ouvrages de prélèvement · 2026']];
+    note='L’usage déclaré est AEP ou domestique. Le référentiel localise les ouvrages recensés, pas leur débit actuel.';
   } else if (type==='navigation' || type==='locks') {
     fields=[['Type',waterTransportLayers[type].label],['Identifiant ROE',item.id],
       ['Source',type==='navigation'?'BD CARTO® · IGN':'Référentiel des obstacles à l’écoulement · Sandre']];

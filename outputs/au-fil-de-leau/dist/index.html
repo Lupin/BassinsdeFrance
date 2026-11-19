@@ -95,9 +95,10 @@
             </select>
           </div>
           <label class="check"><input type="checkbox" id="aquiferLayer"> Nappes captives <span id="aquiferCount" class="layer-count"></span></label>
-          <label class="check"><input type="checkbox" id="watersheds" aria-describedby="watershedHelp"> Limites des sous-bassins <span id="watershedStatus" class="layer-count" role="status"></span></label>
-          <p id="watershedHelp" class="sidebar-note" hidden>Les contours se précisent au zoom. Choisissez un point sur la carte pour identifier son sous-bassin.</p>
+          <label class="check"><input type="checkbox" id="watersheds" aria-describedby="watershedHelp"> Sous-bassins topographiques · France entière <span id="watershedStatus" class="layer-count" role="status"></span></label>
+          <p id="watershedHelp" class="sidebar-note" hidden>Le découpage de tous les sous-bassins apparaît sur la carte. Cliquez sur un point pour afficher celui qui le contient.</p>
           <label class="check"><input type="checkbox" id="water-lakes"> <span class="layer-symbol area" style="--layer-color:#147a9a" aria-hidden="true"></span>Lacs et plans d’eau <span id="water-lakes-status" class="layer-count" role="status"></span></label>
+          <label class="check"><input type="checkbox" id="water-captages"> <span class="layer-symbol square" style="--layer-color:#075b8f" aria-hidden="true"></span>Captages d’eau potable <span id="water-captages-status" class="layer-count" role="status"></span></label>
         </fieldset>
         <fieldset class="layer-group">
           <legend>Navigation</legend>
@@ -188,6 +189,7 @@
       <a href="https://www.sandre.eaufrance.fr/v2/news/diffusion-du-millesime-2026-de-la-bd-topage-metropole" target="_blank" rel="noopener">BD TOPAGE® · IGN, OFB et Sandre</a>
       <a href="https://services.sandre.eaufrance.fr/geo/obs?SERVICE=WFS&amp;VERSION=2.0.0&amp;REQUEST=GetCapabilities" target="_blank" rel="noopener">Ouvrages sur les cours d’eau · ROE</a>
       <a href="https://www.data.gouv.fr/datasets/plans-deau-metropole-2026-bd-topage-r" target="_blank" rel="noopener">Plans d’eau · BD TOPAGE® 2026</a>
+      <a href="https://www.data.gouv.fr/datasets/ouvrages-de-prelevement-france-entiere-1" target="_blank" rel="noopener">Captages d’eau potable · Sandre PRL 2026</a>
       <a href="https://geoservices.ign.fr/bdcarto" target="_blank" rel="noopener">Voies navigables · BD CARTO® IGN</a>
       <a href="https://www.vnf.fr/vnf/services/navi/" target="_blank" rel="noopener">Conditions de navigation · VNF Navi</a>
       <a href="https://assainissement.developpement-durable.gouv.fr/pages/data/basededonneesteu.php" target="_blank" rel="noopener">Stations d’épuration · ERU 2024</a>
@@ -239,6 +241,7 @@
   <script id="navigation-data-lazy" data-src="navigation-data.js"></script>
   <script id="locks-data-lazy" data-src="locks-data.js"></script>
   <script id="lakes-data-lazy" data-src="lakes-data.js"></script>
+  <script id="captages-data-lazy" data-src="captages-data.js"></script>
   <script id="wastewater-data-lazy" data-src="wastewater-data.js"></script>
   <script id="flood-overview-data-lazy" data-src="flood-overview-data.js"></script>
   <script src="flood.js" defer></script>
