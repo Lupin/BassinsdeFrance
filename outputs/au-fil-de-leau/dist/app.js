@@ -258,6 +258,7 @@ function drawStatic() {
     if (basin && basin!==b.id) continue;
     bc.fillStyle=colors[b.id]+'13'; bc.fill(b.path,'evenodd');
   }
+  drawFlood(bc);
   if (EX) for (const [type,id] of Object.entries(areaLayers)) {
     if (!$('#'+id).checked) continue;
     const entries = type==='aquifer' ? EX.aquifers : EX.protected;
@@ -678,3 +679,5 @@ initExplorer();
 resize();
 
 initWaterTransport();
+
+initFloodLayer();

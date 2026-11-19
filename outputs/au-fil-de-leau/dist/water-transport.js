@@ -3,11 +3,12 @@
 const waterTransportLayers = {
   lakes: {color:'#147a9a', label:'Plan d’eau'},
   navigation: {color:'#50218a', label:'Voie navigable'},
-  locks: {color:'#976024', label:'Écluse'}
+  locks: {color:'#976024', label:'Écluse'},
+  wastewater: {color:'#04746f', label:'Station d’épuration'}
 };
 
 function prepareWaterLayer(key, records) {
-  return records.map(([n, value, geometry]) => {
+  return records.map(([n, value, geometry, capacity]) => {
     if (key === 'lakes') {
       const polys = geometry.map(polygon => polygon.map(ring => ring.map(p => project(...p))));
       return {n, hectares:value, polys, box:boundsOf(polys.flat())};
@@ -17,7 +18,7 @@ function prepareWaterLayer(key, records) {
       return {n, line, box:boundsOf([line])};
     }
     const point = project(...value);
-    return {n, id:geometry, point, box:[...point, ...point]};
+    return {n, id:geometry, capacity, point, box:[...point, ...point]};
   });
 }
 
@@ -26,10 +27,12 @@ function waterTransportGlobal(key) {
 }
 
 function initWaterTransport() {
+  $('#wastewaterCapacity').addEventListener('change', invalidate);
   for (const [key, layer] of Object.entries(waterTransportLayers)) {
     const checkbox = $(`#water-${key}`);
     const status = $(`#water-${key}-status`);
     function refresh() {
+      if (key === 'wastewater') $('#wastewaterOptions').hidden = !checkbox.checked;
       invalidate();
       if (!checkbox.checked || layer.grid || layer.loading) return;
       layer.loading = true;
@@ -45,6 +48,7 @@ function initWaterTransport() {
         invalidate();
       }).catch(() => {
         checkbox.checked = false;
+        if (key === 'wastewater') $('#wastewaterOptions').hidden = true;
         status.textContent = 'Chargement impossible. Réessaie.';
       }).finally(() => {
         layer.loading = false;
@@ -63,8 +67,10 @@ function visibleWaterItems(key, box) {
     for (const item of grid.get(cell) || []) candidates.add(item);
   });
   const minArea = Math.max(5, 60 / zoom ** 2);
+  const minCapacity = key === 'wastewater' ? Number($('#wastewaterCapacity').value) : 0;
   return [...candidates].filter(item => overlaps(item.box, box)
-    && (key !== 'lakes' || item.hectares >= minArea));
+    && (key !== 'lakes' || item.hectares >= minArea)
+    && (!minCapacity || item.capacity >= minCapacity));
 }
 
 function drawWaterTransport(c, box, s, points = false) {
@@ -92,6 +98,7 @@ function drawWaterTransport(c, box, s, points = false) {
     c.restore();
     return;
   }
+  drawWastewater(c, box, s);
   // Keep locks legible at national scale by drawing one symbol per screen cell.
   const cells = new Set();
   for (const item of visibleWaterItems('locks', box)) {
@@ -107,6 +114,33 @@ function drawWaterTransport(c, box, s, points = false) {
   }
 }
 
+function wastewaterMarkers(box, s) {
+  const cells = new Map();
+  for (const item of visibleWaterItems('wastewater', box)) {
+    const [x,y] = item.point;
+    const key = Math.floor(x * s / 13) + ':' + Math.floor(y * s / 13);
+    const previous = cells.get(key);
+    if (!previous || (item.capacity || 0) > (previous.capacity || 0)) cells.set(key,item);
+  }
+  return [...cells.values()];
+}
+
+let plottedWastewater = [];
+function drawWastewater(c, box, s) {
+  plottedWastewater = wastewaterMarkers(box, s);
+  if (!plottedWastewater.length) return;
+  c.beginPath();
+  for (const {point:[x,y]} of plottedWastewater) {
+    c.moveTo(x+3/s,y);
+    c.arc(x,y,3/s,0,Math.PI*2);
+  }
+  c.fillStyle=waterTransportLayers.wastewater.color;
+  c.fill();
+  c.strokeStyle='#fff';
+  c.lineWidth=.8/s;
+  c.stroke();
+}
+
 function waterTransportHits(point, tolerance) {
   const [x,y] = point;
   const box = [x-tolerance,y-tolerance,x+tolerance,y+tolerance];
@@ -117,7 +151,11 @@ function waterTransportHits(point, tolerance) {
   const routes = visibleWaterItems('navigation', box).filter(item =>
     item.line.some((vertex,index) => index && pointToSegment(point,item.line[index-1],vertex) <= distance));
   const lakes = visibleWaterItems('lakes', box).filter(item => inside(item,point));
+  const station = $('#water-wastewater').checked && plottedWastewater
+    .filter(item => dist2(point,item.point) <= distance)
+    .sort((a,b) => dist2(a.point,point) - dist2(b.point,point))[0];
   return [
+    ...(station ? [{type:'wastewater', item:station}] : []),
     ...locks.map(item => ({type:'locks', item})),
     ...routes.slice(0, 1).map(item => ({type:'navigation', item})),
     ...lakes.slice(0, 1).map(item => ({type:'lakes', item}))

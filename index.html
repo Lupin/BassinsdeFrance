@@ -105,6 +105,30 @@
         <p class="sidebar-note">Tracés violets pour les voies, carrés ocre pour les écluses et surfaces bleues pour les plans d’eau. Les petits plans d’eau apparaissent en zoomant.</p>
         <p class="sidebar-note">Tronçons classés navigables par l’IGN et ouvrages avec écluse recensés par le Sandre. Consultez VNF pour les conditions de navigation.</p>
       </details>
+      <details class="controls">
+        <summary>Assainissement et inondations</summary>
+        <label class="check"><input type="checkbox" id="water-wastewater"> Stations d’épuration <span id="water-wastewater-status" class="layer-count" role="status"></span></label>
+        <div id="wastewaterOptions" class="subcontrols" hidden>
+          <label for="wastewaterCapacity">Capacité nominale minimale</label>
+          <select id="wastewaterCapacity">
+            <option value="0">Toutes les capacités</option>
+            <option value="2000">2 000 équivalents-habitants</option>
+            <option value="10000">10 000 équivalents-habitants</option>
+            <option value="100000">100 000 équivalents-habitants</option>
+          </select>
+          <p class="sidebar-note">Points turquoise. Les stations proches sont regroupées visuellement et se distinguent en zoomant.</p>
+        </div>
+        <label class="check"><input type="checkbox" id="floodLayer"> Enveloppes d’inondation potentielles</label>
+        <div id="floodOptions" class="subcontrols" hidden>
+          <label for="floodType">Phénomène</label>
+          <select id="floodType">
+            <option value="EAIP_CE_GE">Débordement de cours d’eau et ruissellement</option>
+            <option value="EAIP_SM_GE">Submersion marine</option>
+          </select>
+          <p id="floodStatus" class="sidebar-note" role="status"></p>
+          <p class="sidebar-note">Contours indicatifs d’événements exceptionnels, diffusés par Géorisques à partir des EAIP. Pour une situation locale, consultez la carte officielle.</p>
+        </div>
+      </details>
       <p class="sidebar-note">Les couleurs identifient les grands bassins de gestion. Les départements se dessinent en noir et les régions en pointillé gris foncé.</p>
     </aside>
 
@@ -147,6 +171,8 @@
       <a href="https://www.data.gouv.fr/datasets/plans-deau-metropole-2026-bd-topage-r" target="_blank" rel="noopener">Plans d’eau · BD TOPAGE® 2026</a>
       <a href="https://geoservices.ign.fr/bdcarto" target="_blank" rel="noopener">Voies navigables · BD CARTO® IGN</a>
       <a href="https://www.vnf.fr/vnf/services/navi/" target="_blank" rel="noopener">Conditions de navigation · VNF Navi</a>
+      <a href="https://assainissement.developpement-durable.gouv.fr/pages/data/basededonneesteu.php" target="_blank" rel="noopener">Stations d’épuration · ERU 2024</a>
+      <a href="https://www.georisques.gouv.fr/risques/inondations" target="_blank" rel="noopener">Enveloppes d’inondation · Géorisques</a>
       <a href="https://hubeau.eaufrance.fr/page/api-hydrometrie" target="_blank" rel="noopener">Stations et débits · Hub’Eau</a>
     </div>
     <div class="resource-group"><strong>Territoires et milieux</strong>
@@ -188,11 +214,13 @@
   <script id="topology-data-lazy" data-src="outputs/au-fil-de-leau/dist/topology-data.js?v=7bf8a986c663"></script>
   <script src="outputs/au-fil-de-leau/dist/data.js?v=c2253c4f7828" defer></script>
   <script src="outputs/au-fil-de-leau/dist/admin.js?v=7112a2af8e64" defer></script>
-  <script src="outputs/au-fil-de-leau/dist/explore.js?v=829183dee888" defer></script>
+  <script src="outputs/au-fil-de-leau/dist/explore.js?v=f8f9b42a5b51" defer></script>
   <script id="navigation-data-lazy" data-src="outputs/au-fil-de-leau/dist/navigation-data.js?v=3a6837842e35"></script>
   <script id="locks-data-lazy" data-src="outputs/au-fil-de-leau/dist/locks-data.js?v=10cac2e18688"></script>
   <script id="lakes-data-lazy" data-src="outputs/au-fil-de-leau/dist/lakes-data.js?v=b13b6d6bbe78"></script>
-  <script src="outputs/au-fil-de-leau/dist/water-transport.js?v=61d1899348cb" defer></script>
-  <script src="outputs/au-fil-de-leau/dist/app.js?v=70823362a0c6" defer></script>
+  <script id="wastewater-data-lazy" data-src="outputs/au-fil-de-leau/dist/wastewater-data.js?v=543bb5f5823d"></script>
+  <script src="outputs/au-fil-de-leau/dist/flood.js?v=a8750ba85549" defer></script>
+  <script src="outputs/au-fil-de-leau/dist/water-transport.js?v=06cf278be13e" defer></script>
+  <script src="outputs/au-fil-de-leau/dist/app.js?v=60431237fb80" defer></script>
 </body>
 </html>

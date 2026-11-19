@@ -547,6 +547,11 @@ function showFeature({type,item}) {
   let fields=[],note='';
   if (type==='lakes') {
     fields=[['Surface',number.format(item.hectares)+' ha'],['Source','BD TOPAGE® 2026']];
+  } else if (type==='wastewater') {
+    fields=[['Identifiant Sandre',item.id],
+      ['Capacité nominale',item.capacity == null ? 'Non renseignée' : number.format(item.capacity)+' EH'],
+      ['Source','Base Eaux résiduaires urbaines · 2024']];
+    note='EH signifie équivalent-habitant, une unité de dimensionnement du traitement.';
   } else if (type==='navigation' || type==='locks') {
     fields=[['Type',waterTransportLayers[type].label],['Identifiant ROE',item.id],
       ['Source',type==='navigation'?'BD CARTO® · IGN':'Référentiel des obstacles à l’écoulement · Sandre']];

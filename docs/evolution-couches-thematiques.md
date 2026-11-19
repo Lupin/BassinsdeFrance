@@ -22,6 +22,13 @@ python work/build-water-transport.py --lakes /chemin/PlanEau_FXX-geojson.zip \
 python work/package.py
 ```
 
+## Deuxième lot : assainissement et inondations
+
+- **Stations d’épuration.** L’export géographique 2024 du [portail de l’assainissement collectif](https://assainissement.developpement-durable.gouv.fr/pages/data/basededonneesteu.php) alimente une couche de 22 353 stations métropolitaines en service. La fiche affiche le code Sandre et la capacité nominale, avec un filtre à 2 000, 10 000 ou 100 000 équivalents-habitants. Lorsqu’un même emplacement à l’écran recouvre plusieurs stations, la plus capacitaire est affichée. Le point localise la station.
+- **Enveloppes d’inondation potentielles.** Les couches EAIP détaillées de [Géorisques](https://www.georisques.gouv.fr/risques/inondations) sont demandées au service cartographique du BRGM à l’activation et s’affichent en zoomant. Le menu permet de choisir le débordement de cours d’eau et le ruissellement, ou la submersion marine. Les EAIP sont des enveloppes indicatives d’événements exceptionnels. La couverture dépend de la source et la couche exige une connexion.
+
+Pour actualiser les stations, sélectionner l’année et télécharger l’export national GeoJSON sur le portail, puis lancer `python work/build-wastewater.py /chemin/export.geojson` et `python work/package.py`. Mettre à jour l’année affichée dans l’interface si elle change.
+
 ## Navigation et fret
 
 - Voies navigables : fleuves, rivières et canaux.
