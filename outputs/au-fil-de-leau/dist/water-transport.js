@@ -2,7 +2,7 @@
 
 const waterTransportLayers = {
   lakes: {color:'#147a9a', label:'Plan d’eau'},
-  navigation: {color:'#57328c', label:'Voie navigable'},
+  navigation: {color:'#50218a', label:'Voie navigable'},
   locks: {color:'#976024', label:'Écluse'}
 };
 
@@ -72,14 +72,24 @@ function drawWaterTransport(c, box, s, points = false) {
     for (const item of visibleWaterItems('lakes', box)) {
       drawArea(c, item, '#1489b34d', waterTransportLayers.lakes.color, s);
     }
-    for (const item of visibleWaterItems('navigation', box)) {
+    const routes = visibleWaterItems('navigation', box);
+    if (!routes.length) return;
+    const network = new Path2D();
+    for (const item of routes) {
       item.path ||= linePath(item.line);
-      c.strokeStyle = waterTransportLayers.navigation.color;
-      c.lineWidth = 2 / s;
-      c.setLineDash([4 / s, 3 / s]);
-      c.stroke(item.path);
+      network.addPath(item.path);
     }
-    c.setLineDash([]);
+    c.save();
+    c.lineJoin = 'round';
+    c.lineCap = 'round';
+    c.strokeStyle = '#fffffff0';
+    c.lineWidth = 4.8 / s;
+    c.stroke(network);
+    c.strokeStyle = waterTransportLayers.navigation.color;
+    c.lineWidth = 2.7 / s;
+    if (zoom >= 2.5) c.setLineDash([7 / s, 4 / s]);
+    c.stroke(network);
+    c.restore();
     return;
   }
   // Keep locks legible at national scale by drawing one symbol per screen cell.

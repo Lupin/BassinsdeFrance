@@ -1,12 +1,20 @@
 """Generate the GitHub Pages entry point and the portable offline HTML."""
 import base64
+from hashlib import sha256
 import re
 from pathlib import Path
 
 dist = Path("outputs/au-fil-de-leau/dist")
 template = (dist / "index.html").read_text()
 local_assets = re.compile(r'(src|href|data-src)="(style\.css|[a-z-]+\.js)"')
-published = local_assets.sub(lambda match: f'{match[1]}="{dist.as_posix()}/{match[2]}"', template)
+def published_asset(match):
+    attr, filename = match.groups()
+    path = dist / filename
+    revision = sha256(path.read_bytes()).hexdigest()[:12]
+    return f'{attr}="{path.as_posix()}?v={revision}"'
+
+
+published = local_assets.sub(published_asset, template)
 Path("index.html").write_text(published)
 
 font = base64.b64encode((dist / "assets/Inter.ttf").read_bytes()).decode()
