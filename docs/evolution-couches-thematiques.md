@@ -1,5 +1,27 @@
 # Nouvelles couches pour l’atlas
 
+## Premier lot disponible sur cette branche
+
+Dans **Réglages → Navigation et plans d’eau**, les trois couches s’activent séparément. Sur la carte, chaque objet peut ouvrir une fiche. Le téléchargement commence à la première activation. Le tracé des cours d’eau et son animation restent indépendants de ces couches.
+
+| Couche | Source | Périmètre affiché |
+| --- | --- | --- |
+| Voies navigables | [BD CARTO® · IGN](https://geoservices.ign.fr/bdcarto) | Tronçons classés navigables. Ce classement ne renseigne ni le trafic de fret ni les restrictions du jour. |
+| Écluses | [ROE · Sandre](https://services.sandre.eaufrance.fr/geo/obs?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetCapabilities) | Ouvrages existants avec un dispositif de type écluse ([code Sandre 1](https://id.eaufrance.fr/nsa/559)). |
+| Lacs et plans d’eau | [BD TOPAGE® 2026 · IGN, OFB et Sandre](https://www.data.gouv.fr/datasets/plans-deau-metropole-2026-bd-topage-r) | Plans d’eau métropolitains de 5 ha ou plus. Le seuil d’affichage augmente au zoom national. |
+
+Les données IGN et Sandre pour la navigation ont été extraites le 19 novembre 2026. [VNF Navi](https://www.vnf.fr/vnf/services/navi/) fournit les conditions de navigation.
+
+Pour régénérer les fichiers, installer `shapely>=2.1` et `pyproj` dans un environnement Python et télécharger l’archive GeoJSON des plans d’eau depuis la fiche BD TOPAGE®. Depuis la racine du projet :
+
+```sh
+python work/download-navigation.py work/data/navigation
+python work/build-water-transport.py --lakes /chemin/PlanEau_FXX-geojson.zip \
+  --navigation work/data/navigation/navigation-*.geojson \
+  --locks work/data/navigation/locks.geojson
+python work/package.py
+```
+
 ## Navigation et fret
 
 - Voies navigables : fleuves, rivières et canaux.

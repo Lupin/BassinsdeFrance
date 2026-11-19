@@ -281,6 +281,7 @@ function drawStatic() {
     drawRiver(bc,river);
   }
   bc.globalAlpha=1;
+  drawWaterTransport(bc,box,s);
   if (selected) {
     const route = currentRoute(selected);
     if (route?.full?.length) {
@@ -313,6 +314,7 @@ function drawStatic() {
   if ($('#regions').checked && geography) for (const item of geography.regions) {
     if (overlaps(item.box,box)) outline(lc,item,'#3b4654',1.65/s,[5/s,3/s]);
   }
+  drawWaterTransport(lc,box,s,true);
   drawLabels(lc);
   drawPoints(lc);
 
@@ -572,6 +574,7 @@ function clickOptions(x,y,includeTerritories=true) {
   const nearby = plotted.filter(hit=>dist2(hit.p,screen)<=hit.radius**2).sort((a,b)=>dist2(a.p,screen)-dist2(b.p,screen));
   for (const hit of nearby.slice(0,4)) hits.push(hit);
   for (const group of clusters) if (dist2(group.p,screen)<=110) hits.push({type:'cluster',item:group});
+  hits.push(...waterTransportHits(p,6/(scale*zoom)));
   const r=nearestRiver(p,7/(scale*zoom));
   if (r) hits.push({type:'river',item:r});
   if ($('#prefectures').checked) for(const d of departments) {
@@ -673,3 +676,5 @@ new IntersectionObserver(([entry])=>{
 document.fonts.ready.then(invalidate);
 initExplorer();
 resize();
+
+initWaterTransport();

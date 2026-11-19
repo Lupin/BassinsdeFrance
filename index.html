@@ -97,6 +97,14 @@
         <label class="check"><input type="checkbox" id="aquiferLayer"> Nappes captives <span id="aquiferCount" class="layer-count"></span></label>
         <label class="check"><input type="checkbox" id="watersheds"> Bassin versant topographique</label>
       </details>
+      <details class="controls">
+        <summary>Navigation et plans d’eau</summary>
+        <label class="check"><input type="checkbox" id="water-navigation"> Voies navigables <span id="water-navigation-status" class="layer-count" role="status"></span></label>
+        <label class="check"><input type="checkbox" id="water-locks"> Écluses <span id="water-locks-status" class="layer-count" role="status"></span></label>
+        <label class="check"><input type="checkbox" id="water-lakes"> Lacs et plans d’eau <span id="water-lakes-status" class="layer-count" role="status"></span></label>
+        <p class="sidebar-note">Pointillés violets pour les voies, carrés ocre pour les écluses et surfaces bleues pour les plans d’eau. Les petits plans d’eau apparaissent en zoomant.</p>
+        <p class="sidebar-note">Tronçons classés navigables par l’IGN et ouvrages avec écluse recensés par le Sandre. Consultez VNF pour les conditions de navigation.</p>
+      </details>
       <p class="sidebar-note">Les couleurs identifient les grands bassins de gestion. Les départements se dessinent en noir et les régions en pointillé gris foncé.</p>
     </aside>
 
@@ -136,6 +144,9 @@
     <div class="resource-group"><strong>Hydrographie</strong>
       <a href="https://www.sandre.eaufrance.fr/v2/news/diffusion-du-millesime-2026-de-la-bd-topage-metropole" target="_blank" rel="noopener">BD TOPAGE® · IGN, OFB et Sandre</a>
       <a href="https://services.sandre.eaufrance.fr/geo/obs?SERVICE=WFS&amp;VERSION=2.0.0&amp;REQUEST=GetCapabilities" target="_blank" rel="noopener">Ouvrages sur les cours d’eau · ROE</a>
+      <a href="https://www.data.gouv.fr/datasets/plans-deau-metropole-2026-bd-topage-r" target="_blank" rel="noopener">Plans d’eau · BD TOPAGE® 2026</a>
+      <a href="https://geoservices.ign.fr/bdcarto" target="_blank" rel="noopener">Voies navigables · BD CARTO® IGN</a>
+      <a href="https://www.vnf.fr/vnf/services/navi/" target="_blank" rel="noopener">Conditions de navigation · VNF Navi</a>
       <a href="https://hubeau.eaufrance.fr/page/api-hydrometrie" target="_blank" rel="noopener">Stations et débits · Hub’Eau</a>
     </div>
     <div class="resource-group"><strong>Territoires et milieux</strong>
@@ -178,6 +189,10 @@
   <script src="outputs/au-fil-de-leau/dist/data.js" defer></script>
   <script src="outputs/au-fil-de-leau/dist/admin.js" defer></script>
   <script src="outputs/au-fil-de-leau/dist/explore.js" defer></script>
+  <script id="navigation-data-lazy" data-src="outputs/au-fil-de-leau/dist/navigation-data.js"></script>
+  <script id="locks-data-lazy" data-src="outputs/au-fil-de-leau/dist/locks-data.js"></script>
+  <script id="lakes-data-lazy" data-src="outputs/au-fil-de-leau/dist/lakes-data.js"></script>
+  <script src="outputs/au-fil-de-leau/dist/water-transport.js" defer></script>
   <script src="outputs/au-fil-de-leau/dist/app.js" defer></script>
 </body>
 </html>

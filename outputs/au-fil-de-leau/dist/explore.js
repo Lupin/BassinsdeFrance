@@ -481,6 +481,8 @@ function searchKey(event) {
 }
 
 function hitLabel({type,item}) {
+  if (waterTransportLayers[type]) return item.n === waterTransportLayers[type].label
+    ? item.n : item.n + ' · ' + waterTransportLayers[type].label;
   if(type==='river') return displayName(item.n);
   if(type==='cluster') return item.items.length+' ouvrages hydroélectriques';
   if(type==='flow') return item.n+' · '+discharge.format(item.q)+' m³/s';
@@ -543,7 +545,13 @@ function showFeature({type,item}) {
   close.setAttribute('aria-label','Fermer cette fiche');
   container.replaceChildren(title,close);
   let fields=[],note='';
-  if (type==='flow') {
+  if (type==='lakes') {
+    fields=[['Surface',number.format(item.hectares)+' ha'],['Source','BD TOPAGE® 2026']];
+  } else if (type==='navigation' || type==='locks') {
+    fields=[['Type',waterTransportLayers[type].label],['Identifiant ROE',item.id],
+      ['Source',type==='navigation'?'BD CARTO® · IGN':'Référentiel des obstacles à l’écoulement · Sandre']];
+    note='Données de repérage. Consultez VNF Navi pour les conditions de navigation.';
+  } else if (type==='flow') {
     fields=[['Débit observé',discharge.format(item.q)+' m³/s'],['Cours d’eau',item.river],
       ['Date et heure à Paris',new Date(item.date).toLocaleString('fr-FR',{dateStyle:'medium',timeStyle:'short',timeZone:'Europe/Paris'})],
       ['Qualification',item.qualification||'Non précisée'],['Statut',item.status],['Code station',item.station||item.site]];
