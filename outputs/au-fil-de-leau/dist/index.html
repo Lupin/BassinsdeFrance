@@ -95,7 +95,8 @@
             </select>
           </div>
           <label class="check"><input type="checkbox" id="aquiferLayer"> Nappes captives <span id="aquiferCount" class="layer-count"></span></label>
-          <label class="check"><input type="checkbox" id="watersheds"> Bassin versant topographique</label>
+          <label class="check"><input type="checkbox" id="watersheds" aria-describedby="watershedHelp"> Bassin versant topographique</label>
+          <p id="watershedHelp" class="sidebar-note" hidden>Choisissez un point sur la carte pour afficher le bassin qui le contient.</p>
           <label class="check"><input type="checkbox" id="water-lakes"> <span class="layer-symbol area" style="--layer-color:#147a9a" aria-hidden="true"></span>Lacs et plans d’eau <span id="water-lakes-status" class="layer-count" role="status"></span></label>
         </fieldset>
         <fieldset class="layer-group">

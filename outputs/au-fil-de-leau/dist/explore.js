@@ -503,12 +503,12 @@ function inspectMapClick(x,y) {
   const close=makeButton('×','close-button',closeChoices);
   close.setAttribute('aria-label','Fermer les objets de la carte');
   choices.append(close);
-  for (const hit of hits) {
-    choices.append(makeButton(hitLabel(hit),'item-button',()=>{closeChoices();openHit(hit);}));
-  }
   if ($('#watersheds').checked) choices.append(makeButton('Voir le bassin versant topographique','item-button',()=>{
     closeChoices();showWatershed(world(x,y));
   }));
+  for (const hit of hits) {
+    choices.append(makeButton(hitLabel(hit),'item-button',()=>{closeChoices();openHit(hit);}));
+  }
   choices.style.left=Math.max(8,Math.min(x+12,w-270))+'px';
   choices.style.top=Math.max(8,Math.min(y+8,h-225))+'px';
   choices.hidden=false;
@@ -586,6 +586,7 @@ function showFeature({type,item}) {
   container.append(featureList(fields));
   if (note) container.append(node('p',note,'note'));
   if (item.url && /^https:\/\//.test(item.url)) container.append(textLink('Voir la fiche INPN',item.url));
+  if (type==='watershed') container.append(makeButton('Cadrer le bassin versant','text-button',()=>frameBounds(item.box)));
   if (type==='industry') container.append(textLink('Voir la fiche Géorisques','https://www.georisques.gouv.fr/risques/installations/donnees/details/'+encodeURIComponent(item.id)));
   if (type==='flow' && item.station) container.append(textLink('Voir la station sur HydroPortail','https://www.hydro.eaufrance.fr/stationhydro/'+encodeURIComponent(item.station||item.site)+'/fiche'));
   if (type==='department'||type==='region') container.append(makeButton('Voir les bassins en commun','text-button',()=>selectTerritory(item,type,{focus:true})));
@@ -596,7 +597,7 @@ function showFeature({type,item}) {
   container.hidden=false;
 }
 
-async function showWatershed(point) {
+async function showWatershed(point,{focus=false}={}) {
   if (!$('#watersheds').checked) return;
   watershedRequest?.abort();
   const request=new AbortController(), run=++watershedRun;
@@ -637,13 +638,16 @@ async function showWatershed(point) {
     }
     const area=b=>(b[2]-b[0])*(b[3]-b[1]);
     localWatershed=choices.sort((a,b)=>area(a.box)-area(b.box))[0]||null;
-    if (localWatershed) showFeature({type:'watershed',item:localWatershed});
+    if (localWatershed) {
+      if (focus) frameBounds(localWatershed.box);
+      showFeature({type:'watershed',item:localWatershed});
+    }
     else holder.replaceChildren(node('p','Aucun périmètre topographique trouvé pour ce point.','note'));
     invalidate();
   } catch (error) {
     if (request.signal.aborted || run!==watershedRun) return;
     holder.replaceChildren(node('p','Le service du Sandre est momentanément indisponible.','note'),
-      makeButton('Réessayer','text-button',()=>showWatershed(point)));
+      makeButton('Réessayer','text-button',()=>showWatershed(point,{focus})));
   }
 }
 
@@ -655,7 +659,7 @@ function updateLegend() {
   if ($('#nuclearPlants').checked) descriptors.push(['nuclear','Centrales nucléaires']);
   if ($('#protectedLayer').checked) descriptors.push(['protected',loadedLayers.has('protected')?'Zones protégées':'Chargement des zones protégées…']);
   if ($('#aquiferLayer').checked) descriptors.push(['aquifer',loadedLayers.has('aquifers')?'Nappes captives':'Chargement des nappes captives…']);
-  if ($('#watersheds').checked) descriptors.push(['watershed','Bassin versant · choisissez un point']);
+  if ($('#watersheds').checked) descriptors.push(['watershed',localWatershed?'Bassin versant sélectionné':'Bassin versant · choisissez un point']);
   if ($('#flowsLayer').checked) {
     const scope=$('#flowScope').value;
     const text=scope==='view'?'vue actuelle':scope==='auto'&&basin?basinById.get(basin).name:'France métropolitaine';
@@ -797,9 +801,11 @@ function initExplorer() {
     });
   }
   $('#watersheds').addEventListener('change',()=>{
-    if ($('#watersheds').checked && selected) {
+    const enabled = $('#watersheds').checked;
+    $('#watershedHelp').hidden = !enabled;
+    if (enabled && selected) {
       const p=currentRoute(selected)?.line?.[0]||selected.p[0]?.[0];
-      if (p) showWatershed(p);
+      if (p) showWatershed(p,{focus:true});
     } else {
       watershedRequest?.abort();watershedRun++;localWatershed=null;
     }

@@ -236,10 +236,10 @@ function outline(c, item, color, width, dash=[]) {
   if (!item.path) item.path = polyPath(item.polys);
   c.strokeStyle=color; c.lineWidth=width; c.setLineDash(dash); c.stroke(item.path); c.setLineDash([]);
 }
-function drawArea(c,item,fill,stroke,s) {
+function drawArea(c,item,fill,stroke,s,width=.65) {
   if (!item.path) item.path = polyPath(item.polys);
   c.fillStyle=fill; c.fill(item.path,'evenodd');
-  outline(c,item,stroke,.65/s);
+  outline(c,item,stroke,width/s);
 }
 function drawStatic() {
   bc.setTransform(1,0,0,1,0,0);
@@ -269,7 +269,7 @@ function drawStatic() {
       drawArea(bc,item,aqua?'#287bbc29':'#25764630',aqua?'#287bbc9c':'#217144a6',s);
     }
   }
-  if (localWatershed) drawArea(bc,localWatershed,'#244eaa22','#284d9c',s);
+  if (localWatershed) drawArea(bc,localWatershed,'#284d9c35','#244eaa',s,2.3);
   if (highlightedCrossing) drawArea(bc,highlightedCrossing,colors[highlightedCrossing.basin]+'48',colors[highlightedCrossing.basin],s);
 
   visible = visibleRivers(box);
