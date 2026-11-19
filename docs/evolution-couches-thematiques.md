@@ -41,6 +41,12 @@ La couche utilise un filtre par catégorie et un identifiant unique AIOT par ét
 
 Pour actualiser la couche, télécharger l’export CSV national depuis la page Géorisques, puis lancer `python work/build-industry.py /chemin/export.csv` avec `pyproj`, suivi de `python work/package.py`.
 
+## Limites des sous-bassins
+
+**Couches de données → Eau et milieux → Limites des sous-bassins** affiche les 6 190 périmètres de l’[export BD TOPAGE® 2026](https://www.data.gouv.fr/datasets/bassins-versant-topographiques-metropole-2026-bd-topage-r). Deux résolutions sont générées à partir de la même géométrie de référence. La vue d’ensemble se charge à l’activation. Le niveau plus détaillé se charge au zoom ou lors d’une sélection. La fiche indique l’exutoire lorsqu’il est renseigné par la source.
+
+Pour régénérer la couche, utiliser `python work/build-watersheds.py /chemin/BassinVersantTopographique_FXX-geojson.zip` avec Shapely 2.1 ou supérieur et pyproj, puis `python work/package.py`.
+
 ## Navigation et fret
 
 - Voies navigables : fleuves, rivières et canaux.

@@ -5,8 +5,7 @@ let vectorMap = null, vectorReady = false, vectorKey = '', vectorRun = 0;
 let vectorScript;
 let currentTerritory = null, territoryMode = 'department', compareRun = 0;
 let searchResults = [], searchIndex = -1;
-let watershedRequest, watershedRun = 0;
-const watershedCache = new Map(), routeAreaCache = new WeakMap();
+const routeAreaCache = new WeakMap();
 const pointLayers = {dam:'hydroDams', flow:'flowsLayer', nuclear:'nuclearPlants'};
 const areaNames = {protected:'Zones protégées traversées', aquifer:'Nappes captives en recouvrement'};
 function loadDataset(id, file, key) {
@@ -139,7 +138,7 @@ function basinButtons() {
 }
 function clearContext() {
   highlightedCrossing=null; highlightedArea=null; locatedPoint=null;
-  watershedRequest?.abort(); watershedRun++;
+  watershedRun++;
   localWatershed=null;
   $('#featureDetail').hidden=true;
   $('#featureDetail').replaceChildren();
@@ -158,10 +157,7 @@ function chooseRiver(river,{focus=false,scope=false}={}) {
   if (!river.route && !topology) getTopology().then(()=>{
     if (selected===exactSelection && topology.has(river.id)) {renderDetail();invalidate();}
   }).catch(()=>{});
-  if ($('#watersheds').checked) {
-    const point=river.route?.line?.[0]||river.p[0]?.[0];
-    if (point) showWatershed(point);
-  }
+
 }
 function selectTerritory(item,type,{focus=false}={}) {
   currentTerritory={item,type}; basin=null; selected=null;clearContext();clearSearch();
@@ -538,6 +534,7 @@ function featureList(fields) {
 }
 function showFeature({type,item}) {
   const container=$('#featureDetail');
+  container.dataset.kind=type;
   const title=node('h3',type==='department'||type==='region'?item.name:item.n);
   const close=makeButton('×','close-button',()=>{
     container.hidden=true;highlightedArea=null;invalidate();
@@ -579,7 +576,7 @@ function showFeature({type,item}) {
   } else if (type==='department'||type==='region') {
     fields=type==='department'?[['Département',item.code],['Chef-lieu',item.chief]]:[['Type','Région administrative']];
   } else if (type==='watershed') {
-    fields=[['Référentiel','BD TOPAGE® · Sandre'],['Identifiant',item.id],['Exutoire',item.outlet]];
+    fields=[['Référentiel','BD TOPAGE® 2026 · Sandre'],['Identifiant',item.id],['Exutoire',item.outlet]];
     note='Périmètre qui contient le point choisi.';
   }
   if (item.link) fields.push(['Association au réseau',associationLabel(item)]);
@@ -597,60 +594,6 @@ function showFeature({type,item}) {
   container.hidden=false;
 }
 
-async function showWatershed(point,{focus=false}={}) {
-  if (!$('#watersheds').checked) return;
-  watershedRequest?.abort();
-  const request=new AbortController(), run=++watershedRun;
-  watershedRequest=request;
-  const [lon,lat]=unproject(point);
-  if (lon< -6||lon>10||lat<41||lat>52) return;
-  const holder=$('#featureDetail');
-  holder.replaceChildren(node('p','Recherche du bassin versant autour de ce point…','note'));holder.hidden=false;
-  localWatershed=null;locatedPoint=point;invalidate();
-  const id=[lon.toFixed(3),lat.toFixed(3)].join(',');
-  try {
-    let features=watershedCache.get(id);
-    if (!features) {
-      const radius=.004;
-      const params=new URLSearchParams({SERVICE:'WFS',VERSION:'2.0.0',REQUEST:'GetFeature',
-        TYPENAMES:'sa:BassinVersantTopographique_FXX',OUTPUTFORMAT:'geojson',SRSNAME:'EPSG:4326',COUNT:'30',
-        BBOX:[lat-radius,lon-radius,lat+radius,lon+radius,'urn:ogc:def:crs:EPSG::4326'].join(',')});
-      const response=await fetch('https://services.sandre.eaufrance.fr/geo/topage?'+params,{signal:request.signal});
-      if (!response.ok) throw new Error('Sandre indisponible');
-      features=(await response.json()).features;
-      if (!Array.isArray(features)) throw new Error('Réponse invalide');
-      watershedCache.set(id,features);
-      if (watershedCache.size>10) watershedCache.delete(watershedCache.keys().next().value);
-    }
-    if (run!==watershedRun) return;
-    const choices=[];
-    for (const feature of features) {
-      const geometry=feature.geometry, p=feature.properties;
-      if (!geometry) continue;
-      const geometryPolys=geometry.type==='Polygon'?[geometry.coordinates]:geometry.type==='MultiPolygon'?geometry.coordinates:[];
-      if (!geometryPolys.length) continue;
-      const polys=geometryPolys.map(poly=>poly.map(ring=>ring.map(coord=>project(...coord))));
-      const box=boundsOf(polys.flat());
-      const name=p.TopoOH;
-      const item={id:p.CdOH,n:name?displayName(name===name.toLocaleUpperCase('fr')?name.toLocaleLowerCase('fr'):name):'Bassin versant topographique',
-        outlet:riverById.get(p.CdExutoire_1)?.n||p.CdExutoire_1,polys,box};
-      if (inside(item,point)) choices.push(item);
-    }
-    const area=b=>(b[2]-b[0])*(b[3]-b[1]);
-    localWatershed=choices.sort((a,b)=>area(a.box)-area(b.box))[0]||null;
-    if (localWatershed) {
-      if (focus) frameBounds(localWatershed.box);
-      showFeature({type:'watershed',item:localWatershed});
-    }
-    else holder.replaceChildren(node('p','Aucun périmètre topographique trouvé pour ce point.','note'));
-    invalidate();
-  } catch (error) {
-    if (request.signal.aborted || run!==watershedRun) return;
-    holder.replaceChildren(node('p','Le service du Sandre est momentanément indisponible.','note'),
-      makeButton('Réessayer','text-button',()=>showWatershed(point,{focus})));
-  }
-}
-
 function updateLegend() {
   const holder=$('#layerInfo'), descriptors=[];
   if ($('#departments').checked) descriptors.push(['department','Départements']);
@@ -659,7 +602,7 @@ function updateLegend() {
   if ($('#nuclearPlants').checked) descriptors.push(['nuclear','Centrales nucléaires']);
   if ($('#protectedLayer').checked) descriptors.push(['protected',loadedLayers.has('protected')?'Zones protégées':'Chargement des zones protégées…']);
   if ($('#aquiferLayer').checked) descriptors.push(['aquifer',loadedLayers.has('aquifers')?'Nappes captives':'Chargement des nappes captives…']);
-  if ($('#watersheds').checked) descriptors.push(['watershed',localWatershed?'Bassin versant sélectionné':'Bassin versant · choisissez un point']);
+  if ($('#watersheds').checked) descriptors.push(['watershed',localWatershed?'Sous-bassin sélectionné':'Limites des sous-bassins']);
   if ($('#flowsLayer').checked) {
     const scope=$('#flowScope').value;
     const text=scope==='view'?'vue actuelle':scope==='auto'&&basin?basinById.get(basin).name:'France métropolitaine';
@@ -800,17 +743,6 @@ function initExplorer() {
       invalidate();
     });
   }
-  $('#watersheds').addEventListener('change',()=>{
-    const enabled = $('#watersheds').checked;
-    $('#watershedHelp').hidden = !enabled;
-    if (enabled && selected) {
-      const p=currentRoute(selected)?.line?.[0]||selected.p[0]?.[0];
-      if (p) showWatershed(p,{focus:true});
-    } else {
-      watershedRequest?.abort();watershedRun++;localWatershed=null;
-    }
-    invalidate();
-  });
   $('#density').addEventListener('input',()=>{
     $('#densityLabel').value=['Principal','Progressif','Détaillé','Très fin'][+$('#density').value];
     invalidate();

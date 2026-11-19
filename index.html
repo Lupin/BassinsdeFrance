@@ -95,8 +95,8 @@
             </select>
           </div>
           <label class="check"><input type="checkbox" id="aquiferLayer"> Nappes captives <span id="aquiferCount" class="layer-count"></span></label>
-          <label class="check"><input type="checkbox" id="watersheds" aria-describedby="watershedHelp"> Bassin versant topographique</label>
-          <p id="watershedHelp" class="sidebar-note" hidden>Choisissez un point sur la carte pour afficher le bassin qui le contient.</p>
+          <label class="check"><input type="checkbox" id="watersheds" aria-describedby="watershedHelp"> Limites des sous-bassins <span id="watershedStatus" class="layer-count" role="status"></span></label>
+          <p id="watershedHelp" class="sidebar-note" hidden>Les contours se précisent au zoom. Choisissez un point sur la carte pour identifier son sous-bassin.</p>
           <label class="check"><input type="checkbox" id="water-lakes"> <span class="layer-symbol area" style="--layer-color:#147a9a" aria-hidden="true"></span>Lacs et plans d’eau <span id="water-lakes-status" class="layer-count" role="status"></span></label>
         </fieldset>
         <fieldset class="layer-group">
@@ -193,6 +193,7 @@
       <a href="https://assainissement.developpement-durable.gouv.fr/pages/data/basededonneesteu.php" target="_blank" rel="noopener">Stations d’épuration · ERU 2024</a>
       <a href="https://www.georisques.gouv.fr/risques/inondations" target="_blank" rel="noopener">Enveloppes d’inondation · Géorisques</a>
       <a href="https://www.georisques.gouv.fr/donnees/bases-de-donnees/installations-industrielles" target="_blank" rel="noopener">Installations industrielles et Seveso · Géorisques</a>
+      <a href="https://www.data.gouv.fr/datasets/bassins-versant-topographiques-metropole-2026-bd-topage-r" target="_blank" rel="noopener">Sous-bassins topographiques · BD TOPAGE® 2026</a>
       <a href="https://hubeau.eaufrance.fr/page/api-hydrometrie" target="_blank" rel="noopener">Stations et débits · Hub’Eau</a>
     </div>
     <div class="resource-group"><strong>Territoires et milieux</strong>
@@ -216,7 +217,7 @@
     <h2 id="methodTitle">Données et méthode</h2>
     <h3>Les cours d’eau et les bassins</h3>
     <p>La carte représente la France métropolitaine, Corse incluse. Elle utilise la BD TOPAGE® 2026 (IGN et OFB, diffusée par le Sandre), extraite en octobre 2026. Les tracés du réseau sont simplifiés et la sélection embarquée couvre les cours d’eau d’environ 1,8 km ou plus. Les longueurs sont estimées sur les tracés disponibles.</p>
-    <p>Les sept grands bassins sont des périmètres de gestion. Un bassin versant topographique représente le territoire qui draine les eaux vers un exutoire. La couche locale affiche le périmètre officiel qui contient le point choisi, lorsqu’il est disponible.</p>
+    <p>Les sept grands bassins sont des périmètres de gestion. Un bassin versant topographique représente le territoire qui draine les eaux vers un exutoire. La couche des sous-bassins affiche les zones hydrographiques diffusées par la BD TOPAGE® 2026. Un clic permet d’identifier celle qui contient le point choisi.</p>
     <h3>L’animation et les parcours</h3>
     <p>L’animation illustre un sens d’écoulement. Sur le réseau général, il est déduit des connexions de tracés. Les parcours détaillés combinent des repères éditoriaux et des géométries assemblées. Dans le secteur pilote de la haute Loire, 61 cours supplémentaires utilisent les nœuds et sens d’écoulement du référentiel pour rejoindre la Loire. Des erreurs locales restent possibles, notamment dans les canaux et aux frontières. La vitesse de l’animation est indépendante des débits mesurés.</p>
     <h3>Les croisements sur la carte</h3>
@@ -234,7 +235,7 @@
   <script id="topology-data-lazy" data-src="outputs/au-fil-de-leau/dist/topology-data.js?v=7bf8a986c663"></script>
   <script src="outputs/au-fil-de-leau/dist/data.js?v=c2253c4f7828" defer></script>
   <script src="outputs/au-fil-de-leau/dist/admin.js?v=7112a2af8e64" defer></script>
-  <script src="outputs/au-fil-de-leau/dist/explore.js?v=bcf22ed56951" defer></script>
+  <script src="outputs/au-fil-de-leau/dist/explore.js?v=f5c7a997cc6b" defer></script>
   <script id="navigation-data-lazy" data-src="outputs/au-fil-de-leau/dist/navigation-data.js?v=3a6837842e35"></script>
   <script id="locks-data-lazy" data-src="outputs/au-fil-de-leau/dist/locks-data.js?v=10cac2e18688"></script>
   <script id="lakes-data-lazy" data-src="outputs/au-fil-de-leau/dist/lakes-data.js?v=b13b6d6bbe78"></script>
@@ -243,6 +244,9 @@
   <script src="outputs/au-fil-de-leau/dist/flood.js?v=00d973c94b35" defer></script>
   <script id="industry-data-lazy" data-src="outputs/au-fil-de-leau/dist/industry-data.js?v=85a4e1a7ba8d"></script>
   <script src="outputs/au-fil-de-leau/dist/water-transport.js?v=8446d02683ad" defer></script>
-  <script src="outputs/au-fil-de-leau/dist/app.js?v=65b56f2e7ec7" defer></script>
+  <script id="watersheds-overview-data-lazy" data-src="outputs/au-fil-de-leau/dist/watersheds-overview-data.js?v=5bd6abd7bd61"></script>
+  <script id="watersheds-detail-data-lazy" data-src="outputs/au-fil-de-leau/dist/watersheds-detail-data.js?v=da02d682edc9"></script>
+  <script src="outputs/au-fil-de-leau/dist/watershed-layer.js?v=9561420d4804" defer></script>
+  <script src="outputs/au-fil-de-leau/dist/app.js?v=0e676dee5038" defer></script>
 </body>
 </html>

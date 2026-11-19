@@ -269,6 +269,7 @@ function drawStatic() {
       drawArea(bc,item,aqua?'#287bbc29':'#25764630',aqua?'#287bbc9c':'#217144a6',s);
     }
   }
+  drawWatershedLimits(bc,box,s);
   if (localWatershed) drawArea(bc,localWatershed,'#284d9c35','#244eaa',s,2.3);
   if (highlightedCrossing) drawArea(bc,highlightedCrossing,colors[highlightedCrossing.basin]+'48',colors[highlightedCrossing.basin],s);
 
@@ -681,3 +682,5 @@ resize();
 initWaterTransport();
 
 initFloodLayer();
+
+initWatershedLayer();
