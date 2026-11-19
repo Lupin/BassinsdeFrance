@@ -29,6 +29,14 @@ python work/package.py
 
 Pour actualiser les stations, sélectionner l’année et télécharger l’export national GeoJSON sur le portail, puis lancer `python work/build-wastewater.py /chemin/export.geojson` et `python work/package.py`. Mettre à jour l’année affichée dans l’interface si elle change. Pour régénérer l’aperçu EAIP, installer Pillow, lancer `python work/build-flood-overview.py`, puis relancer `python work/package.py`.
 
+## Troisième lot : industrie et sites Seveso
+
+L’export national [Installations industrielles de Géorisques](https://www.georisques.gouv.fr/donnees/bases-de-donnees/installations-industrielles), récupéré le 19 novembre 2026, est filtré sur les établissements métropolitains géolocalisés marqués comme industriels, ainsi que sur ceux classés Seveso. Il couvre 41 365 installations industrielles hors Seveso ou sans statut renseigné, 606 établissements Seveso seuil bas et 703 seuil haut. L’export peut inclure des installations en cessation d’activité.
+
+La couche utilise un filtre par catégorie et un identifiant unique AIOT par établissement. Lors d’un recouvrement des symboles à l’écran, le seuil Seveso le plus haut est prioritaire. Les fiches renvoient vers la source officielle. L’affichage représente des installations répertoriées, pas les périmètres des risques.
+
+Pour actualiser la couche, télécharger l’export CSV national depuis la page Géorisques, puis lancer `python work/build-industry.py /chemin/export.csv` avec `pyproj`, suivi de `python work/package.py`.
+
 ## Navigation et fret
 
 - Voies navigables : fleuves, rivières et canaux.

@@ -4,11 +4,12 @@ const waterTransportLayers = {
   lakes: {color:'#147a9a', label:'Plan d’eau'},
   navigation: {color:'#50218a', label:'Voie navigable'},
   locks: {color:'#976024', label:'Écluse'},
-  wastewater: {color:'#04746f', label:'Station d’épuration'}
+  wastewater: {color:'#04746f', label:'Station d’épuration'},
+  industry: {color:'#4d5661', label:'Installation répertoriée'}
 };
 
 function prepareWaterLayer(key, records) {
-  return records.map(([n, value, geometry, capacity]) => {
+  return records.map(([n, value, geometry, detail, commune, regime]) => {
     if (key === 'lakes') {
       const polys = geometry.map(polygon => polygon.map(ring => ring.map(p => project(...p))));
       return {n, hectares:value, polys, box:boundsOf(polys.flat())};
@@ -18,7 +19,9 @@ function prepareWaterLayer(key, records) {
       return {n, line, box:boundsOf([line])};
     }
     const point = project(...value);
-    return {n, id:geometry, capacity, point, box:[...point, ...point]};
+    const item = {n, id:geometry, point, box:[...point, ...point]};
+    if (key === 'industry') return {...item, seuil:detail, commune, regime};
+    return {...item, capacity:detail};
   });
 }
 
@@ -28,11 +31,14 @@ function waterTransportGlobal(key) {
 
 function initWaterTransport() {
   $('#wastewaterCapacity').addEventListener('change', invalidate);
+  $('#industryFilter').addEventListener('change', invalidate);
+  const optionPanels = {wastewater:'#wastewaterOptions', industry:'#industryOptions'};
   for (const [key, layer] of Object.entries(waterTransportLayers)) {
     const checkbox = $(`#water-${key}`);
     const status = $(`#water-${key}-status`);
+    const options = optionPanels[key] && $(optionPanels[key]);
     function refresh() {
-      if (key === 'wastewater') $('#wastewaterOptions').hidden = !checkbox.checked;
+      if (options) options.hidden = !checkbox.checked;
       invalidate();
       if (!checkbox.checked || layer.grid || layer.loading) return;
       layer.loading = true;
@@ -48,7 +54,7 @@ function initWaterTransport() {
         invalidate();
       }).catch(() => {
         checkbox.checked = false;
-        if (key === 'wastewater') $('#wastewaterOptions').hidden = true;
+        if (options) options.hidden = true;
         status.textContent = 'Chargement impossible. Réessaie.';
       }).finally(() => {
         layer.loading = false;
@@ -68,9 +74,19 @@ function visibleWaterItems(key, box) {
   });
   const minArea = Math.max(5, 60 / zoom ** 2);
   const minCapacity = key === 'wastewater' ? Number($('#wastewaterCapacity').value) : 0;
+  const industrialFilter = key === 'industry' ? $('#industryFilter').value : 'all';
   return [...candidates].filter(item => overlaps(item.box, box)
+    && inIndustrialFilter(item, industrialFilter)
     && (key !== 'lakes' || item.hectares >= minArea)
     && (!minCapacity || item.capacity >= minCapacity));
+}
+
+function inIndustrialFilter(item, filter) {
+  if (filter === 'all') return true;
+  if (filter === 'seveso') return item.seuil > 0;
+  if (filter === 'high') return item.seuil === 2;
+  if (filter === 'low') return item.seuil === 1;
+  return item.seuil === 0;
 }
 
 function drawWaterTransport(c, box, s, points = false) {
@@ -99,6 +115,7 @@ function drawWaterTransport(c, box, s, points = false) {
     return;
   }
   drawWastewater(c, box, s);
+  drawIndustry(c, box, s);
   // Keep locks legible at national scale by drawing one symbol per screen cell.
   const cells = new Set();
   for (const item of visibleWaterItems('locks', box)) {
@@ -114,20 +131,20 @@ function drawWaterTransport(c, box, s, points = false) {
   }
 }
 
-function wastewaterMarkers(box, s) {
+function selectPointMarkers(layer, box, s, priority) {
   const cells = new Map();
-  for (const item of visibleWaterItems('wastewater', box)) {
+  for (const item of visibleWaterItems(layer, box)) {
     const [x,y] = item.point;
     const key = Math.floor(x * s / 13) + ':' + Math.floor(y * s / 13);
     const previous = cells.get(key);
-    if (!previous || (item.capacity || 0) > (previous.capacity || 0)) cells.set(key,item);
+    if (!previous || priority(item) > priority(previous)) cells.set(key,item);
   }
   return [...cells.values()];
 }
 
 let plottedWastewater = [];
 function drawWastewater(c, box, s) {
-  plottedWastewater = wastewaterMarkers(box, s);
+  plottedWastewater = selectPointMarkers('wastewater', box, s, item => item.capacity || 0);
   if (!plottedWastewater.length) return;
   c.beginPath();
   for (const {point:[x,y]} of plottedWastewater) {
@@ -139,6 +156,30 @@ function drawWastewater(c, box, s) {
   c.strokeStyle='#fff';
   c.lineWidth=.8/s;
   c.stroke();
+}
+
+let plottedIndustry = [];
+function drawIndustry(c, box, s) {
+  plottedIndustry = selectPointMarkers('industry', box, s, item => item.seuil);
+  const colors = [waterTransportLayers.industry.color, '#be6215', '#9d2439'];
+  for (const [tier,color] of colors.entries()) {
+    c.beginPath();
+    for (const {point:[x,y], seuil} of plottedIndustry) {
+      if (seuil !== tier) continue;
+      const r = (tier ? 4.6 : 2.6) / s;
+      c.moveTo(x+r,y);
+      if (tier) {
+        c.lineTo(x,y+r); c.lineTo(x-r,y); c.lineTo(x,y-r); c.closePath();
+      } else {
+        c.arc(x,y,r,0,Math.PI*2);
+      }
+    }
+    c.fillStyle = color;
+    c.fill();
+    c.lineWidth = .85 / s;
+    c.strokeStyle = '#fff';
+    c.stroke();
+  }
 }
 
 function waterTransportHits(point, tolerance) {
@@ -154,7 +195,11 @@ function waterTransportHits(point, tolerance) {
   const station = $('#water-wastewater').checked && plottedWastewater
     .filter(item => dist2(point,item.point) <= distance)
     .sort((a,b) => dist2(a.point,point) - dist2(b.point,point))[0];
+  const installation = $('#water-industry').checked && plottedIndustry
+    .filter(item => dist2(point,item.point) <= distance)
+    .sort((a,b) => dist2(a.point,point) - dist2(b.point,point))[0];
   return [
+    ...(installation ? [{type:'industry', item:installation}] : []),
     ...(station ? [{type:'wastewater', item:station}] : []),
     ...locks.map(item => ({type:'locks', item})),
     ...routes.slice(0, 1).map(item => ({type:'navigation', item})),

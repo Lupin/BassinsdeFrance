@@ -23,3 +23,5 @@ Le fond **Positron** est chargé depuis l’instance publique [OpenFreeMap](http
 - **Navigation et plans d’eau** : tronçons navigables issus de la [BD CARTO® de l’IGN](https://geoservices.ign.fr/bdcarto), écluses issues du [ROE](https://services.sandre.eaufrance.fr/geo/obs?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetCapabilities), plans d’eau issus de la [BD TOPAGE® 2026](https://www.data.gouv.fr/datasets/plans-deau-metropole-2026-bd-topage-r). Consulter les modalités de réutilisation des sources.
 
 - **Assainissement et inondations** : base de données sur les eaux résiduaires urbaines (ERU), [Portail de l’assainissement collectif](https://assainissement.developpement-durable.gouv.fr/pages/data/basededonneesteu.php), millésime 2024. Enveloppes approchées des inondations potentielles (EAIP) affichées via le [flux Géorisques du BRGM](https://mapsref.brgm.fr/wxs/georisques/risques?SERVICE=WMS&REQUEST=GetCapabilities).
+
+- **Industrie et sites Seveso** : export national [Installations industrielles de Géorisques](https://www.georisques.gouv.fr/donnees/bases-de-donnees/installations-industrielles), extrait le 19 novembre 2026, filtré et reprojeté en WGS84.

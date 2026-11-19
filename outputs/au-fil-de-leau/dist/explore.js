@@ -547,6 +547,11 @@ function showFeature({type,item}) {
   let fields=[],note='';
   if (type==='lakes') {
     fields=[['Surface',number.format(item.hectares)+' ha'],['Source','BD TOPAGE® 2026']];
+  } else if (type==='industry') {
+    const classification = ['', 'Seveso seuil bas', 'Seveso seuil haut'][item.seuil];
+    fields=[['Commune',item.commune],['Régime déclaré par la source',item.regime],
+      ['Classement',classification],['Identifiant AIOT',item.id],['Source','Géorisques']];
+    note='Le classement décrit l’installation. Il ne délimite pas une zone d’exposition.';
   } else if (type==='wastewater') {
     fields=[['Identifiant Sandre',item.id],
       ['Capacité nominale',item.capacity == null ? 'Non renseignée' : number.format(item.capacity)+' EH'],
@@ -581,6 +586,7 @@ function showFeature({type,item}) {
   container.append(featureList(fields));
   if (note) container.append(node('p',note,'note'));
   if (item.url && /^https:\/\//.test(item.url)) container.append(textLink('Voir la fiche INPN',item.url));
+  if (type==='industry') container.append(textLink('Voir la fiche Géorisques','https://www.georisques.gouv.fr/risques/installations/donnees/details/'+encodeURIComponent(item.id)));
   if (type==='flow' && item.station) container.append(textLink('Voir la station sur HydroPortail','https://www.hydro.eaufrance.fr/stationhydro/'+encodeURIComponent(item.station||item.site)+'/fiche'));
   if (type==='department'||type==='region') container.append(makeButton('Voir les bassins en commun','text-button',()=>selectTerritory(item,type,{focus:true})));
   if (item.link && selected?.id!==item.link[0]) {

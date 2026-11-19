@@ -130,6 +130,22 @@
           <p class="sidebar-note">Les surfaces indiquent des enveloppes approximatives d’événements exceptionnels. Zoomez pour consulter le détail Géorisques. Pour une situation locale, consultez la carte officielle.</p>
         </div>
       </details>
+      <details class="controls">
+        <summary>Industrie et sites Seveso</summary>
+        <label class="check"><input type="checkbox" id="water-industry"> Installations répertoriées <span id="water-industry-status" class="layer-count" role="status"></span></label>
+        <div id="industryOptions" class="subcontrols" hidden>
+          <label for="industryFilter">Catégorie</label>
+          <select id="industryFilter">
+            <option value="all">Industrie et Seveso</option>
+            <option value="seveso">Seveso · tous seuils</option>
+            <option value="high">Seveso · seuil haut</option>
+            <option value="low">Seveso · seuil bas</option>
+            <option value="industry">Industrie hors Seveso ou statut non renseigné</option>
+          </select>
+          <p class="sidebar-note">Ronds gris pour les autres installations, losanges orange pour le seuil bas et rouge foncé pour le seuil haut.</p>
+          <p class="sidebar-note">Source Géorisques. En vue d’ensemble, un seul site par groupe de points proches est représenté. Zoomez pour les distinguer.</p>
+        </div>
+      </details>
       <p class="sidebar-note">Les couleurs identifient les grands bassins de gestion. Les départements se dessinent en noir et les régions en pointillé gris foncé.</p>
     </aside>
 
@@ -174,6 +190,7 @@
       <a href="https://www.vnf.fr/vnf/services/navi/" target="_blank" rel="noopener">Conditions de navigation · VNF Navi</a>
       <a href="https://assainissement.developpement-durable.gouv.fr/pages/data/basededonneesteu.php" target="_blank" rel="noopener">Stations d’épuration · ERU 2024</a>
       <a href="https://www.georisques.gouv.fr/risques/inondations" target="_blank" rel="noopener">Enveloppes d’inondation · Géorisques</a>
+      <a href="https://www.georisques.gouv.fr/donnees/bases-de-donnees/installations-industrielles" target="_blank" rel="noopener">Installations industrielles et Seveso · Géorisques</a>
       <a href="https://hubeau.eaufrance.fr/page/api-hydrometrie" target="_blank" rel="noopener">Stations et débits · Hub’Eau</a>
     </div>
     <div class="resource-group"><strong>Territoires et milieux</strong>
@@ -222,6 +239,7 @@
   <script id="wastewater-data-lazy" data-src="wastewater-data.js"></script>
   <script id="flood-overview-data-lazy" data-src="flood-overview-data.js"></script>
   <script src="flood.js" defer></script>
+  <script id="industry-data-lazy" data-src="industry-data.js"></script>
   <script src="water-transport.js" defer></script>
   <script src="app.js" defer></script>
 </body>

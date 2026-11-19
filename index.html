@@ -130,6 +130,22 @@
           <p class="sidebar-note">Les surfaces indiquent des enveloppes approximatives d’événements exceptionnels. Zoomez pour consulter le détail Géorisques. Pour une situation locale, consultez la carte officielle.</p>
         </div>
       </details>
+      <details class="controls">
+        <summary>Industrie et sites Seveso</summary>
+        <label class="check"><input type="checkbox" id="water-industry"> Installations répertoriées <span id="water-industry-status" class="layer-count" role="status"></span></label>
+        <div id="industryOptions" class="subcontrols" hidden>
+          <label for="industryFilter">Catégorie</label>
+          <select id="industryFilter">
+            <option value="all">Industrie et Seveso</option>
+            <option value="seveso">Seveso · tous seuils</option>
+            <option value="high">Seveso · seuil haut</option>
+            <option value="low">Seveso · seuil bas</option>
+            <option value="industry">Industrie hors Seveso ou statut non renseigné</option>
+          </select>
+          <p class="sidebar-note">Ronds gris pour les autres installations, losanges orange pour le seuil bas et rouge foncé pour le seuil haut.</p>
+          <p class="sidebar-note">Source Géorisques. En vue d’ensemble, un seul site par groupe de points proches est représenté. Zoomez pour les distinguer.</p>
+        </div>
+      </details>
       <p class="sidebar-note">Les couleurs identifient les grands bassins de gestion. Les départements se dessinent en noir et les régions en pointillé gris foncé.</p>
     </aside>
 
@@ -174,6 +190,7 @@
       <a href="https://www.vnf.fr/vnf/services/navi/" target="_blank" rel="noopener">Conditions de navigation · VNF Navi</a>
       <a href="https://assainissement.developpement-durable.gouv.fr/pages/data/basededonneesteu.php" target="_blank" rel="noopener">Stations d’épuration · ERU 2024</a>
       <a href="https://www.georisques.gouv.fr/risques/inondations" target="_blank" rel="noopener">Enveloppes d’inondation · Géorisques</a>
+      <a href="https://www.georisques.gouv.fr/donnees/bases-de-donnees/installations-industrielles" target="_blank" rel="noopener">Installations industrielles et Seveso · Géorisques</a>
       <a href="https://hubeau.eaufrance.fr/page/api-hydrometrie" target="_blank" rel="noopener">Stations et débits · Hub’Eau</a>
     </div>
     <div class="resource-group"><strong>Territoires et milieux</strong>
@@ -215,14 +232,15 @@
   <script id="topology-data-lazy" data-src="outputs/au-fil-de-leau/dist/topology-data.js?v=7bf8a986c663"></script>
   <script src="outputs/au-fil-de-leau/dist/data.js?v=c2253c4f7828" defer></script>
   <script src="outputs/au-fil-de-leau/dist/admin.js?v=7112a2af8e64" defer></script>
-  <script src="outputs/au-fil-de-leau/dist/explore.js?v=f8f9b42a5b51" defer></script>
+  <script src="outputs/au-fil-de-leau/dist/explore.js?v=fa3b489ab810" defer></script>
   <script id="navigation-data-lazy" data-src="outputs/au-fil-de-leau/dist/navigation-data.js?v=3a6837842e35"></script>
   <script id="locks-data-lazy" data-src="outputs/au-fil-de-leau/dist/locks-data.js?v=10cac2e18688"></script>
   <script id="lakes-data-lazy" data-src="outputs/au-fil-de-leau/dist/lakes-data.js?v=b13b6d6bbe78"></script>
   <script id="wastewater-data-lazy" data-src="outputs/au-fil-de-leau/dist/wastewater-data.js?v=543bb5f5823d"></script>
   <script id="flood-overview-data-lazy" data-src="outputs/au-fil-de-leau/dist/flood-overview-data.js?v=5cef764efa0f"></script>
   <script src="outputs/au-fil-de-leau/dist/flood.js?v=00d973c94b35" defer></script>
-  <script src="outputs/au-fil-de-leau/dist/water-transport.js?v=06cf278be13e" defer></script>
+  <script id="industry-data-lazy" data-src="outputs/au-fil-de-leau/dist/industry-data.js?v=85a4e1a7ba8d"></script>
+  <script src="outputs/au-fil-de-leau/dist/water-transport.js?v=8446d02683ad" defer></script>
   <script src="outputs/au-fil-de-leau/dist/app.js?v=60431237fb80" defer></script>
 </body>
 </html>
