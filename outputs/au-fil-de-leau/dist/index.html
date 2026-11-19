@@ -58,93 +58,94 @@
         <input id="density" type="range" min="0" max="3" step="1" value="1">
         <div class="range-label"><span>Principal</span><span>Très fin</span></div>
       </details>
-      <details class="controls">
+      <details class="controls layer-controls">
         <summary>Couches de données</summary>
-        <label class="check"><input type="checkbox" id="hydroDams"> Ouvrages hydroélectriques <span id="damCount" class="layer-count"></span></label>
-        <label class="check"><input type="checkbox" id="nuclearPlants"> Centrales nucléaires <span id="nuclearCount" class="layer-count"></span></label>
-        <label class="check"><input type="checkbox" id="flowsLayer"> Stations et débits <span id="flowCount" class="layer-count"></span></label>
-        <div id="flowControls" class="subcontrols" hidden>
-          <label for="flowFilter">Débit observé</label>
-          <select id="flowFilter">
-            <option value="all">Tous les débits</option>
-            <option value="negative">Valeurs négatives</option>
-            <option value="range:0:0.1">De 0 à moins de 0,1 m³/s</option>
-            <option value="range:0.1:1">De 0,1 à moins de 1 m³/s</option>
-            <option value="range:1:10">De 1 à moins de 10 m³/s</option>
-            <option value="range:10:100">De 10 à moins de 100 m³/s</option>
-            <option value="range:100:Infinity">100 m³/s et plus</option>
-          </select>
-          <label for="flowScope">Périmètre</label>
-          <select id="flowScope">
-            <option value="auto">Suivre le bassin sélectionné</option>
-            <option value="france">France métropolitaine</option>
-            <option value="view">Vue actuelle</option>
-          </select>
-        </div>
-        <label class="check"><input type="checkbox" id="protectedLayer"> Zones protégées <span id="protectedCount" class="layer-count"></span></label>
-        <div id="protectedControls" class="subcontrols" hidden>
-          <label for="protectedFilter">Type de protection</label>
-          <select id="protectedFilter">
-            <option value="all">Toutes les catégories</option>
-            <option value="pn">Parcs nationaux</option>
-            <option value="pnr">Parcs naturels régionaux</option>
-            <option value="reserves">Réserves naturelles</option>
-            <option value="apb">Arrêtés de protection de biotope</option>
-            <option value="natura-hab">Natura 2000 · habitats</option>
-            <option value="natura-ois">Natura 2000 · oiseaux</option>
-          </select>
-        </div>
-        <label class="check"><input type="checkbox" id="aquiferLayer"> Nappes captives <span id="aquiferCount" class="layer-count"></span></label>
-        <label class="check"><input type="checkbox" id="watersheds"> Bassin versant topographique</label>
-      </details>
-      <details class="controls">
-        <summary>Navigation et plans d’eau</summary>
-        <label class="check"><input type="checkbox" id="water-navigation"> Voies navigables <span id="water-navigation-status" class="layer-count" role="status"></span></label>
-        <label class="check"><input type="checkbox" id="water-locks"> Écluses <span id="water-locks-status" class="layer-count" role="status"></span></label>
-        <label class="check"><input type="checkbox" id="water-lakes"> Lacs et plans d’eau <span id="water-lakes-status" class="layer-count" role="status"></span></label>
-        <p class="sidebar-note">Tracés violets pour les voies, carrés ocre pour les écluses et surfaces bleues pour les plans d’eau. Les petits plans d’eau apparaissent en zoomant.</p>
-        <p class="sidebar-note">Tronçons classés navigables par l’IGN et ouvrages avec écluse recensés par le Sandre. Consultez VNF pour les conditions de navigation.</p>
-      </details>
-      <details class="controls">
-        <summary>Assainissement et inondations</summary>
-        <label class="check"><input type="checkbox" id="water-wastewater"> Stations d’épuration <span id="water-wastewater-status" class="layer-count" role="status"></span></label>
-        <div id="wastewaterOptions" class="subcontrols" hidden>
-          <label for="wastewaterCapacity">Capacité nominale minimale</label>
-          <select id="wastewaterCapacity">
-            <option value="0">Toutes les capacités</option>
-            <option value="2000">2 000 équivalents-habitants</option>
-            <option value="10000">10 000 équivalents-habitants</option>
-            <option value="100000">100 000 équivalents-habitants</option>
-          </select>
-          <p class="sidebar-note">Points turquoise. Les stations proches sont regroupées visuellement et se distinguent en zoomant.</p>
-        </div>
-        <label class="check"><input type="checkbox" id="floodLayer"> Enveloppes d’inondation potentielles</label>
-        <div id="floodOptions" class="subcontrols" hidden>
-          <label for="floodType">Phénomène</label>
-          <select id="floodType">
-            <option value="EAIP_CE_GE">Débordement de cours d’eau et ruissellement</option>
-            <option value="EAIP_SM_GE">Submersion marine</option>
-          </select>
-          <button type="button" id="floodFocus" class="text-button" hidden>Voir le détail ici</button>
-          <p id="floodStatus" class="sidebar-note" role="status"></p>
-          <p class="sidebar-note">Les surfaces indiquent des enveloppes approximatives d’événements exceptionnels. Zoomez pour consulter le détail Géorisques. Pour une situation locale, consultez la carte officielle.</p>
-        </div>
-      </details>
-      <details class="controls">
-        <summary>Industrie et sites Seveso</summary>
-        <label class="check"><input type="checkbox" id="water-industry"> Installations répertoriées <span id="water-industry-status" class="layer-count" role="status"></span></label>
-        <div id="industryOptions" class="subcontrols" hidden>
-          <label for="industryFilter">Catégorie</label>
-          <select id="industryFilter">
-            <option value="all">Industrie et Seveso</option>
-            <option value="seveso">Seveso · tous seuils</option>
-            <option value="high">Seveso · seuil haut</option>
-            <option value="low">Seveso · seuil bas</option>
-            <option value="industry">Industrie hors Seveso ou statut non renseigné</option>
-          </select>
-          <p class="sidebar-note">Ronds gris pour les autres installations, losanges orange pour le seuil bas et rouge foncé pour le seuil haut.</p>
-          <p class="sidebar-note">Source Géorisques. En vue d’ensemble, un seul site par groupe de points proches est représenté. Zoomez pour les distinguer.</p>
-        </div>
+        <fieldset class="layer-group">
+          <legend>Eau et milieux</legend>
+          <label class="check"><input type="checkbox" id="flowsLayer"> Stations et débits <span id="flowCount" class="layer-count"></span></label>
+          <div id="flowControls" class="subcontrols" hidden>
+            <label for="flowFilter">Débit observé</label>
+            <select id="flowFilter">
+              <option value="all">Tous les débits</option>
+              <option value="negative">Valeurs négatives</option>
+              <option value="range:0:0.1">De 0 à moins de 0,1 m³/s</option>
+              <option value="range:0.1:1">De 0,1 à moins de 1 m³/s</option>
+              <option value="range:1:10">De 1 à moins de 10 m³/s</option>
+              <option value="range:10:100">De 10 à moins de 100 m³/s</option>
+              <option value="range:100:Infinity">100 m³/s et plus</option>
+            </select>
+            <label for="flowScope">Périmètre</label>
+            <select id="flowScope">
+              <option value="auto">Suivre le bassin sélectionné</option>
+              <option value="france">France métropolitaine</option>
+              <option value="view">Vue actuelle</option>
+            </select>
+          </div>
+          <label class="check"><input type="checkbox" id="protectedLayer"> Zones protégées <span id="protectedCount" class="layer-count"></span></label>
+          <div id="protectedControls" class="subcontrols" hidden>
+            <label for="protectedFilter">Type de protection</label>
+            <select id="protectedFilter">
+              <option value="all">Toutes les catégories</option>
+              <option value="pn">Parcs nationaux</option>
+              <option value="pnr">Parcs naturels régionaux</option>
+              <option value="reserves">Réserves naturelles</option>
+              <option value="apb">Arrêtés de protection de biotope</option>
+              <option value="natura-hab">Natura 2000 · habitats</option>
+              <option value="natura-ois">Natura 2000 · oiseaux</option>
+            </select>
+          </div>
+          <label class="check"><input type="checkbox" id="aquiferLayer"> Nappes captives <span id="aquiferCount" class="layer-count"></span></label>
+          <label class="check"><input type="checkbox" id="watersheds"> Bassin versant topographique</label>
+          <label class="check"><input type="checkbox" id="water-lakes"> <span class="layer-symbol area" style="--layer-color:#147a9a" aria-hidden="true"></span>Lacs et plans d’eau <span id="water-lakes-status" class="layer-count" role="status"></span></label>
+        </fieldset>
+        <fieldset class="layer-group">
+          <legend>Navigation</legend>
+          <label class="check"><input type="checkbox" id="water-navigation"> <span class="layer-symbol line" style="--layer-color:#50218a" aria-hidden="true"></span>Voies navigables <span id="water-navigation-status" class="layer-count" role="status"></span></label>
+          <label class="check"><input type="checkbox" id="water-locks"> <span class="layer-symbol square" style="--layer-color:#976024" aria-hidden="true"></span>Écluses <span id="water-locks-status" class="layer-count" role="status"></span></label>
+        </fieldset>
+        <fieldset class="layer-group">
+          <legend>Assainissement et inondations</legend>
+          <label class="check"><input type="checkbox" id="water-wastewater"> Stations d’épuration <span id="water-wastewater-status" class="layer-count" role="status"></span></label>
+          <div id="wastewaterOptions" class="subcontrols" hidden>
+            <label for="wastewaterCapacity">Capacité nominale minimale</label>
+            <select id="wastewaterCapacity">
+              <option value="0">Toutes les capacités</option>
+              <option value="2000">2 000 équivalents-habitants</option>
+              <option value="10000">10 000 équivalents-habitants</option>
+              <option value="100000">100 000 équivalents-habitants</option>
+            </select>
+            <p class="sidebar-note">Points turquoise. Les stations proches sont regroupées visuellement et se distinguent en zoomant.</p>
+          </div>
+          <label class="check"><input type="checkbox" id="floodLayer"> Enveloppes d’inondation potentielles</label>
+          <div id="floodOptions" class="subcontrols" hidden>
+            <label for="floodType">Phénomène</label>
+            <select id="floodType">
+              <option value="EAIP_CE_GE">Débordement de cours d’eau et ruissellement</option>
+              <option value="EAIP_SM_GE">Submersion marine</option>
+            </select>
+            <button type="button" id="floodFocus" class="text-button" hidden>Voir le détail ici</button>
+            <p id="floodStatus" class="sidebar-note" role="status"></p>
+            <p class="sidebar-note">Les surfaces indiquent des enveloppes approximatives d’événements exceptionnels. Zoomez pour consulter le détail Géorisques. Pour une situation locale, consultez la carte officielle.</p>
+          </div>
+        </fieldset>
+        <fieldset class="layer-group">
+          <legend>Énergie et industrie</legend>
+          <label class="check"><input type="checkbox" id="hydroDams"> Ouvrages hydroélectriques <span id="damCount" class="layer-count"></span></label>
+          <label class="check"><input type="checkbox" id="nuclearPlants"> Centrales nucléaires <span id="nuclearCount" class="layer-count"></span></label>
+          <label class="check"><input type="checkbox" id="water-industry"> Sites industriels et Seveso <span id="water-industry-status" class="layer-count" role="status"></span></label>
+          <div id="industryOptions" class="subcontrols" hidden>
+            <label for="industryFilter">Catégorie</label>
+            <select id="industryFilter">
+              <option value="all">Industrie et Seveso</option>
+              <option value="seveso">Seveso · tous seuils</option>
+              <option value="high">Seveso · seuil haut</option>
+              <option value="low">Seveso · seuil bas</option>
+              <option value="industry">Industrie hors Seveso ou statut non renseigné</option>
+            </select>
+            <p class="sidebar-note">Ronds gris pour les autres installations, losanges orange pour le seuil bas et rouge foncé pour le seuil haut.</p>
+            <p class="sidebar-note">Source Géorisques. En vue d’ensemble, un seul site par groupe de points proches est représenté. Zoomez pour les distinguer.</p>
+          </div>
+        </fieldset>
       </details>
       <p class="sidebar-note">Les couleurs identifient les grands bassins de gestion. Les départements se dessinent en noir et les régions en pointillé gris foncé.</p>
     </aside>

@@ -2,7 +2,7 @@
 
 ## Premier lot disponible sur cette branche
 
-Dans **Réglages → Navigation et plans d’eau**, les trois couches s’activent séparément. Sur la carte, chaque objet peut ouvrir une fiche. Le téléchargement commence à la première activation. Le tracé des cours d’eau et son animation restent indépendants de ces couches.
+Dans **Réglages → Couches de données**, les trois couches s’activent séparément. Sur la carte, chaque objet peut ouvrir une fiche. Le téléchargement commence à la première activation. Le tracé des cours d’eau et son animation restent indépendants de ces couches.
 
 | Couche | Source | Périmètre affiché |
 | --- | --- | --- |
@@ -24,12 +24,16 @@ python work/package.py
 
 ## Deuxième lot : assainissement et inondations
 
+Ces couches se trouvent sous **Couches de données → Assainissement et inondations**.
+
 - **Stations d’épuration.** L’export géographique 2024 du [portail de l’assainissement collectif](https://assainissement.developpement-durable.gouv.fr/pages/data/basededonneesteu.php) alimente une couche de 22 353 stations métropolitaines en service. La fiche affiche le code Sandre et la capacité nominale, avec un filtre à 2 000, 10 000 ou 100 000 équivalents-habitants. Lorsqu’un même emplacement à l’écran recouvre plusieurs stations, la plus capacitaire est affichée. Le point localise la station.
 - **Enveloppes d’inondation potentielles.** Les couches EAIP détaillées de [Géorisques](https://www.georisques.gouv.fr/risques/inondations) s’affichent dès l’activation grâce à un aperçu national généré à partir du flux BRGM. L’application demande une image adaptée à l’échelle de la vallée. Le bouton « Voir le détail ici » zoome directement autour du centre de la carte. Le menu permet de choisir le débordement de cours d’eau et le ruissellement, ou la submersion marine. Les EAIP sont des enveloppes indicatives d’événements exceptionnels. La couverture dépend de la source et le détail exige une connexion. L’aperçu national reste disponible hors ligne.
 
 Pour actualiser les stations, sélectionner l’année et télécharger l’export national GeoJSON sur le portail, puis lancer `python work/build-wastewater.py /chemin/export.geojson` et `python work/package.py`. Mettre à jour l’année affichée dans l’interface si elle change. Pour régénérer l’aperçu EAIP, installer Pillow, lancer `python work/build-flood-overview.py`, puis relancer `python work/package.py`.
 
 ## Troisième lot : industrie et sites Seveso
+
+La couche se trouve sous **Couches de données → Énergie et industrie**.
 
 L’export national [Installations industrielles de Géorisques](https://www.georisques.gouv.fr/donnees/bases-de-donnees/installations-industrielles), récupéré le 19 novembre 2026, est filtré sur les établissements métropolitains géolocalisés marqués comme industriels, ainsi que sur ceux classés Seveso. Il couvre 41 365 installations industrielles hors Seveso ou sans statut renseigné, 606 établissements Seveso seuil bas et 703 seuil haut. L’export peut inclure des installations en cessation d’activité.
 

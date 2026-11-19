@@ -68,6 +68,13 @@ h1, h2, h3, h4, p { margin: 0; }
 .sidebar { border-right: 1px solid var(--line); padding: 1rem .9rem; }
 .details { border-left: 1px solid var(--line); padding: 1.2rem 1.1rem; }
 .controls { margin-bottom: .34rem; padding: 0 .2rem .55rem; border-bottom: 1px solid var(--line); }
+.layer-group { min-width: 0; margin: .45rem .15rem .9rem; padding: .3rem 0 0; border: 0; border-top: 1px solid var(--line); }
+.layer-group legend { max-width: 100%; padding: 0 .36rem 0 0; color: var(--ink); font-size: .77rem; font-weight: 700; }
+.layer-group:last-child { margin-bottom: .2rem; }
+.layer-symbol { flex: 0 0 .72rem; box-sizing: border-box; width: .72rem; height: .72rem; color: var(--layer-color); }
+.layer-symbol.line { height: 0; border-top: 2px solid currentColor; }
+.layer-symbol.square { flex-basis: .56rem; width: .56rem; height: .56rem; border: 1.5px solid currentColor; }
+.layer-symbol.area { height: .5rem; border: 1px solid currentColor; background: #1489b34d; }
 .controls summary, .detail-section summary { font-weight: 680; font-size: .875rem; padding: .58rem .25rem; color: var(--ink); }
 .controls summary::marker, .detail-section summary::marker { color: var(--blue); }
 .controls > label:not(.check), .controls select, .subcontrols label { display: block; }
