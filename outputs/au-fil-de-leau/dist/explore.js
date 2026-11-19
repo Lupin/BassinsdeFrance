@@ -557,6 +557,9 @@ function showFeature({type,item}) {
   } else if (type==='captage') {
     fields=[['Commune',item.commune],['Identifiant Sandre',item.id],['Source','Référentiel des ouvrages de prélèvement · 2026']];
     note='L’usage déclaré est AEP ou domestique. Le référentiel localise les ouvrages recensés, pas leur débit actuel.';
+  } else if (type==='farm') {
+    fields=[['Commune',item.commune],['Types recensés',item.types.join(', ')],['Identifiant AIOT',item.id],['Source','Géorisques · ICPE']];
+    note='Inventaire des élevages classés ICPE, pas de tous les élevages français.';
   } else if (type==='navigation' || type==='locks') {
     fields=[['Type',waterTransportLayers[type].label],['Identifiant ROE',item.id],
       ['Source',type==='navigation'?'BD CARTO® · IGN':'Référentiel des obstacles à l’écoulement · Sandre']];
@@ -588,6 +591,7 @@ function showFeature({type,item}) {
   if (item.url && /^https:\/\//.test(item.url)) container.append(textLink('Voir la fiche INPN',item.url));
   if (type==='watershed') container.append(makeButton('Cadrer le bassin versant','text-button',()=>frameBounds(item.box)));
   if (type==='industry') container.append(textLink('Voir la fiche Géorisques','https://www.georisques.gouv.fr/risques/installations/donnees/details/'+encodeURIComponent(item.id)));
+  if (type==='farm') container.append(textLink('Voir la fiche Géorisques','https://www.georisques.gouv.fr/risques/installations/donnees/details/'+encodeURIComponent(item.id)));
   if (type==='flow' && item.station) container.append(textLink('Voir la station sur HydroPortail','https://www.hydro.eaufrance.fr/stationhydro/'+encodeURIComponent(item.station||item.site)+'/fiche'));
   if (type==='department'||type==='region') container.append(makeButton('Voir les bassins en commun','text-button',()=>selectTerritory(item,type,{focus:true})));
   if (item.link && selected?.id!==item.link[0]) {

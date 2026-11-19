@@ -101,6 +101,22 @@
           <label class="check"><input type="checkbox" id="water-captages"> <span class="layer-symbol square" style="--layer-color:#075b8f" aria-hidden="true"></span>Captages d’eau potable <span id="water-captages-status" class="layer-count" role="status"></span></label>
         </fieldset>
         <fieldset class="layer-group">
+          <legend>Agriculture et élevage</legend>
+          <label class="check"><input type="checkbox" id="water-farms"> Élevages recensés (ICPE) <span id="water-farms-status" class="layer-count" role="status"></span></label>
+          <div id="farmOptions" class="subcontrols" hidden>
+            <label for="farmFilter">Type d’élevage</label>
+            <select id="farmFilter">
+              <option value="all">Tous les types</option>
+              <option value="Bovins">Bovins</option>
+              <option value="Porcs">Porcs</option>
+              <option value="Volailles">Volailles</option>
+              <option value="Pisciculture">Pisciculture</option>
+            </select>
+            <p class="sidebar-note">Repères : bovins (violet), porcs (orange), volailles (ocre), pisciculture (turquoise).</p>
+            <p class="sidebar-note">Sites classés ICPE recensés par Géorisques. Ce n’est pas l’inventaire de tous les élevages français.</p>
+          </div>
+        </fieldset>
+        <fieldset class="layer-group">
           <legend>Navigation</legend>
           <label class="check"><input type="checkbox" id="water-navigation"> <span class="layer-symbol line" style="--layer-color:#50218a" aria-hidden="true"></span>Voies navigables <span id="water-navigation-status" class="layer-count" role="status"></span></label>
           <label class="check"><input type="checkbox" id="water-locks"> <span class="layer-symbol square" style="--layer-color:#976024" aria-hidden="true"></span>Écluses <span id="water-locks-status" class="layer-count" role="status"></span></label>
@@ -190,6 +206,7 @@
       <a href="https://services.sandre.eaufrance.fr/geo/obs?SERVICE=WFS&amp;VERSION=2.0.0&amp;REQUEST=GetCapabilities" target="_blank" rel="noopener">Ouvrages sur les cours d’eau · ROE</a>
       <a href="https://www.data.gouv.fr/datasets/plans-deau-metropole-2026-bd-topage-r" target="_blank" rel="noopener">Plans d’eau · BD TOPAGE® 2026</a>
       <a href="https://www.data.gouv.fr/datasets/ouvrages-de-prelevement-france-entiere-1" target="_blank" rel="noopener">Captages d’eau potable · Sandre PRL 2026</a>
+      <a href="https://mapsref.brgm.fr/wxs/georisques/georisques_dl?service=wfs&amp;version=2.0.0&amp;request=getcapabilities" target="_blank" rel="noopener">Élevages soumis à ICPE · Géorisques</a>
       <a href="https://geoservices.ign.fr/bdcarto" target="_blank" rel="noopener">Voies navigables · BD CARTO® IGN</a>
       <a href="https://www.vnf.fr/vnf/services/navi/" target="_blank" rel="noopener">Conditions de navigation · VNF Navi</a>
       <a href="https://assainissement.developpement-durable.gouv.fr/pages/data/basededonneesteu.php" target="_blank" rel="noopener">Stations d’épuration · ERU 2024</a>
@@ -242,6 +259,7 @@
   <script id="locks-data-lazy" data-src="locks-data.js"></script>
   <script id="lakes-data-lazy" data-src="lakes-data.js"></script>
   <script id="captages-data-lazy" data-src="captages-data.js"></script>
+  <script id="farms-data-lazy" data-src="farms-data.js"></script>
   <script id="wastewater-data-lazy" data-src="wastewater-data.js"></script>
   <script id="flood-overview-data-lazy" data-src="flood-overview-data.js"></script>
   <script src="flood.js" defer></script>

@@ -3,6 +3,7 @@
 const waterTransportLayers = {
   lakes: {color:'#147a9a', label:'Plan d’eau'},
   captages: {color:'#075b8f', label:'Captage d’eau potable'},
+  farms: {color:'#76519b', label:'Élevage recensé · ICPE'},
   navigation: {color:'#50218a', label:'Voie navigable'},
   locks: {color:'#976024', label:'Écluse'},
   wastewater: {color:'#04746f', label:'Station d’épuration'},
@@ -18,6 +19,10 @@ function prepareWaterLayer(key, records) {
     if (key === 'captages') {
       const point = project(...value);
       return {n, id:geometry, commune:detail, point, box:[...point,...point]};
+    }
+    if (key === 'farms') {
+      const point = project(...value);
+      return {n, id:geometry, types:detail, commune, point, box:[...point,...point]};
     }
     if (key === 'navigation') {
       const line = value.map(p => project(...p));
@@ -37,7 +42,8 @@ function waterTransportGlobal(key) {
 function initWaterTransport() {
   $('#wastewaterCapacity').addEventListener('change', invalidate);
   $('#industryFilter').addEventListener('change', invalidate);
-  const optionPanels = {wastewater:'#wastewaterOptions', industry:'#industryOptions'};
+  $('#farmFilter').addEventListener('change', invalidate);
+  const optionPanels = {wastewater:'#wastewaterOptions', industry:'#industryOptions', farms:'#farmOptions'};
   for (const [key, layer] of Object.entries(waterTransportLayers)) {
     const checkbox = $(`#water-${key}`);
     const status = $(`#water-${key}-status`);
@@ -80,8 +86,10 @@ function visibleWaterItems(key, box) {
   const minArea = Math.max(5, 60 / zoom ** 2);
   const minCapacity = key === 'wastewater' ? Number($('#wastewaterCapacity').value) : 0;
   const industrialFilter = key === 'industry' ? $('#industryFilter').value : 'all';
+  const farmFilter = key === 'farms' ? $('#farmFilter').value : 'all';
   return [...candidates].filter(item => overlaps(item.box, box)
     && inIndustrialFilter(item, industrialFilter)
+    && (key !== 'farms' || farmFilter === 'all' || item.types.includes(farmFilter))
     && (key !== 'lakes' || item.hectares >= minArea)
     && (!minCapacity || item.capacity >= minCapacity));
 }
@@ -121,6 +129,7 @@ function drawWaterTransport(c, box, s, points = false) {
   }
   drawWastewater(c, box, s);
   drawCaptages(c, box, s);
+  drawFarms(c, box, s);
   drawIndustry(c, box, s);
   // Keep locks legible at national scale by drawing one symbol per screen cell.
   const cells = new Set();
@@ -174,6 +183,22 @@ function drawCaptages(c, box, s) {
   c.strokeStyle='#fff'; c.lineWidth=.9/s; c.stroke();
 }
 
+let plottedFarms = [];
+function drawFarms(c, box, s) {
+  plottedFarms = selectPointMarkers('farms', box, s, item => item.types.length);
+  const colors = {Bovins:'#76519b',Porcs:'#c56d38',Volailles:'#d39a21',Pisciculture:'#13817c'};
+  const active = $('#farmFilter').value;
+  for (const [type,color] of Object.entries(colors)) {
+    c.beginPath();
+    for (const item of plottedFarms) {
+      if (active === 'all' ? item.types[0] !== type : active !== type || !item.types.includes(type)) continue;
+      const [x,y]=item.point, r=3.6/s;
+      c.moveTo(x+r,y); c.arc(x,y,r,0,Math.PI*2);
+    }
+    c.fillStyle=color; c.fill(); c.strokeStyle='#fff'; c.lineWidth=.9/s; c.stroke();
+  }
+}
+
 let plottedIndustry = [];
 function drawIndustry(c, box, s) {
   plottedIndustry = selectPointMarkers('industry', box, s, item => item.seuil);
@@ -214,6 +239,9 @@ function waterTransportHits(point, tolerance) {
   const captage = $('#water-captages').checked && plottedCaptages
     .filter(item => dist2(point,item.point) <= distance)
     .sort((a,b) => dist2(a.point,point) - dist2(b.point,point))[0];
+  const farm = $('#water-farms').checked && plottedFarms
+    .filter(item => dist2(point,item.point) <= distance)
+    .sort((a,b) => dist2(a.point,point) - dist2(b.point,point))[0];
   const installation = $('#water-industry').checked && plottedIndustry
     .filter(item => dist2(point,item.point) <= distance)
     .sort((a,b) => dist2(a.point,point) - dist2(b.point,point))[0];
@@ -221,6 +249,7 @@ function waterTransportHits(point, tolerance) {
     ...(installation ? [{type:'industry', item:installation}] : []),
     ...(station ? [{type:'wastewater', item:station}] : []),
     ...(captage ? [{type:'captage', item:captage}] : []),
+    ...(farm ? [{type:'farm', item:farm}] : []),
     ...locks.map(item => ({type:'locks', item})),
     ...routes.slice(0, 1).map(item => ({type:'navigation', item})),
     ...lakes.slice(0, 1).map(item => ({type:'lakes', item}))

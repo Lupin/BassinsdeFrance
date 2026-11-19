@@ -361,6 +361,17 @@ function drawLabels(c) {
     c.fillStyle=color; c.fillText(text,x+5,y-4);
     return true;
   }
+  // Reserve text space for department capitals before hydronyms compete for it.
+  if ($('#prefectures').checked) {
+    const major = new Set(cityLabels.map(x=>x[0]));
+    const ordered = [...departments].sort((a,b)=>Number(major.has(b.chief))-Number(major.has(a.chief)));
+    for (const d of ordered) {
+      if ((zoom<1.8 && !major.has(d.chief)) || ($('#basemap').value==='positron' && zoom<2.75)) {
+        const [x,y]=screenPoint(d.point);
+        c.beginPath(); c.arc(x,y,1.6,0,Math.PI*2); c.fillStyle='#536170'; c.fill();
+      } else label(d.chief,d.point,'#354252',11,true);
+    }
+  }
   if ($('#cities').checked) {
     const candidates = [...visible].reverse().filter(r => {
       if (basin && r.b!==basin) return false;
@@ -374,16 +385,6 @@ function drawLabels(c) {
       const line=r.route?.line || r.p.reduce((a,b)=>a.length>b.length?a:b,[]);
       const p=line[Math.floor(line.length/2)];
       if (p && label(displayName(r.n),p,colors[r.b],r===selected?13:11)) used.add(r.n);
-    }
-  }
-  if ($('#prefectures').checked) {
-    const major = new Set(cityLabels.map(x=>x[0]));
-    const ordered = [...departments].sort((a,b)=>Number(major.has(b.chief))-Number(major.has(a.chief)));
-    for (const d of ordered) {
-      if ((zoom<1.8 && !major.has(d.chief)) || ($('#basemap').value==='positron' && zoom<2.75)) {
-        const [x,y]=screenPoint(d.point);
-        c.beginPath(); c.arc(x,y,1.6,0,Math.PI*2); c.fillStyle='#536170'; c.fill();
-      } else label(d.chief+(zoom>=3?' · '+d.code:''),d.point,'#354252',11,true);
     }
   }
   if ($('#basemap').value==='none' && zoom<2.1) {

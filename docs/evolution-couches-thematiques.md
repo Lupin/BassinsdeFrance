@@ -49,34 +49,29 @@ Pour régénérer la couche, utiliser `python work/build-watersheds.py /chemin/B
 
 ## Navigation et fret
 
-- Voies navigables : fleuves, rivières et canaux.
-- Axes de fret fluvial, avec une distinction entre itinéraires accessibles au fret et trafic observé.
-- Écluses, à associer à leur cours d’eau ou canal lorsque la donnée le permet.
+- **Voies navigables et écluses** : voir le premier lot. La couche cartographie le classement des tronçons, pas la navigabilité opérationnelle ni le fret observé.
+- **Fret fluvial** : non ajouté dans ce lot. Les voies recensées ne permettent pas à elles seules de dire quels axes sont effectivement utilisés pour le fret ni d’indiquer des tonnages. Ajouter ces données séparément lorsqu’une source publique, géolocalisée et suffisamment documentée sera identifiée.
 
 ## Agriculture et aquaculture
 
-- Zones de production maraîchère et vignobles.
-- Zones d’élevage filtrables par type : bovin, ovin, caprin, porcin, volailles, etc.
-- Pisciculture dans une couche distincte.
-- Indiquer l’échelle des données agricoles. Une statistique communale ne permet pas de localiser une exploitation.
+- **Élevages soumis à ICPE.** La couche Géorisques 2026 comprend 8 794 établissements géolocalisés : 69 bovins, 7 176 porcins, 1 544 volailles et 265 piscicultures (un même site peut appartenir à plusieurs catégories). Filtre par type. Il s’agit d’établissements classés soumis à la réglementation ICPE, pas d’un recensement de tous les élevages ni d’un statut garanti d’activité. Les couleurs distinguent bovins, porcs, volailles et pisciculture.
+- **Maraîchage et vignobles** : non ajoutés dans ce lot. Le RPG fournit des parcelles agricoles, mais son extraction nationale détaillée est volumineuse et le flux consulté ne permet pas de combiner la sélection des cultures avec un découpage géographique. Il faut une extraction par département ou une couche de service adaptée avant de proposer un affichage fiable et assez léger.
+- Pour actualiser les élevages, lancer `python work/build-farms.py` avec un accès au WFS Géorisques, puis `python work/package.py`.
 
 ## Eau et inondations
 
 - **Captages d’eau potable.** La couche utilise les ouvrages validés du [référentiel Sandre PRL](https://www.data.gouv.fr/datasets/ouvrages-de-prelevement-france-entiere-1), millésime 2026, dont l’usage principal est AEP ou domestique (codes 5 et sous-niveaux). L’export intégré contient 43 357 points en métropole. Il localise les ouvrages recensés, sans indiquer leur activité instantanée ni leur débit.
 
-- Lacs, avec distinction entre plans d’eau naturels et artificiels si la source le permet.
-- Captages d’eau potable, d’après les données autorisées à la diffusion. Aucun libellé correspondant n’a été trouvé dans l’interface actuelle. Vérifier le contenu des données avant intégration.
-- Stations d’épuration.
-- Zones inondables. Préciser le scénario, la période de retour et la couverture quand ils sont disponibles.
-- Bassins de rétention des eaux, en distinguant les ouvrages de gestion des eaux pluviales des retenues d’eau.
+- **Lacs, captages d’eau potable, stations d’épuration et enveloppes d’inondation** : voir les sections précédentes. Les lacs ne sont pas séparés selon leur origine dans la couche actuelle.
+- **Bassins de rétention** : non ajoutés dans ce lot. Il faut distinguer les ouvrages de gestion des eaux pluviales des plans d’eau et retenues, et vérifier l’existence d’une source nationale homogène avant de dessiner une couche séparée.
 
 ## Industrie
 
-- Sites industriels et filtre dédié aux sites Seveso, avec distinction entre seuil haut et seuil bas si la source le permet. Éviter les doublons quand les deux couches sont actives.
+- **Sites industriels et Seveso** : voir la troisième section. Le filtre distingue les deux seuils Seveso.
 
 ## Intégration à la carte
 
-- Commencer par les voies navigables, les écluses et les lacs, puis avancer selon la disponibilité des données.
+- Les couches non intégrées faute d’une source appropriée sont explicitement signalées ci-dessus ; ne pas assimiler les tronçons navigables au fret réel ni les plans d’eau aux bassins de rétention.
 - Documenter chaque source en pied de page avec sa date, sa couverture et sa licence. Signaler les zones sans données quand la couverture est partielle.
 - Prévoir des couches indépendantes et des légendes adaptées. Charger les données à la demande et adapter leur détail au zoom pour préserver la fluidité.
 - Permettre de superposer les voies navigables et les écluses, ou les zones inondables et les installations. Présenter ces superpositions comme des repères cartographiques.
