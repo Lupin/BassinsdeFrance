@@ -91,7 +91,7 @@ let dirty = true, flowDirty = true, frameRequest = 0, lastFrame = 0, mapIsVisibl
 let drag = null, hoverTime = 0, animatedBranches = [], visible = [];
 const pointers = new Map();
 let EX = null, geography = null, topology = null;
-let highlightedCrossing = null, highlightedArea = null, localWatershed = null, locatedPoint = null;
+let highlightedCrossing = null, highlightedArea = null, localWatershed = null, locatedPoint = null, locatedPointLabel = '';
 let flowPoints = [], clusters = [], plotted = [];
 const areaLayers = {protected:'protectedLayer', aquifer:'aquiferLayer'};
 const tileCache = new Map();
@@ -511,6 +511,21 @@ function drawPoints(c,ratio=dpr) {
     const [x,y]=screenPoint(locatedPoint);
     c.beginPath();c.arc(x,y,8,0,Math.PI*2);c.fillStyle='#ffffffd9';c.fill();c.lineWidth=2.2;c.strokeStyle='#152b52';c.stroke();
     c.beginPath();c.arc(x,y,2.6,0,Math.PI*2);c.fillStyle='#152b52';c.fill();
+    if (locatedPointLabel) {
+      c.save();
+      c.font='650 12px Inter, sans-serif';
+      const padding=8, height=25, width=c.measureText(locatedPointLabel).width+padding*2;
+      const gap=13;
+      const candidates=[[x+gap,y-height-8],[x-width-gap,y-height-8],[x+gap,y+13],[x-width-gap,y+13]];
+      let [left,top]=candidates.find(([px,py])=>px>=6&&px+width<=w-6&&py>=6&&py+height<=h-6)||candidates[0];
+      left=Math.max(6,Math.min(w-width-6,left));
+      top=Math.max(6,Math.min(h-height-6,top));
+      c.fillStyle='#ffffff';c.strokeStyle='#1b4a67';c.lineWidth=1.25;
+      c.fillRect(left,top,width,height);c.strokeRect(left,top,width,height);
+      c.textAlign='left';c.textBaseline='middle';c.fillStyle='#173448';
+      c.fillText(locatedPointLabel,left+padding,top+height/2);
+      c.restore();
+    }
   }
 }
 

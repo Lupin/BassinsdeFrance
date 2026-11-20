@@ -138,7 +138,7 @@ function basinButtons() {
   }
 }
 function clearContext() {
-  highlightedCrossing=null; highlightedArea=null; locatedPoint=null;
+  highlightedCrossing=null; highlightedArea=null; locatedPoint=null; locatedPointLabel='';
   watershedRun++;
   localWatershed=null;
   const feature=$('#featureDetail'),returnFocus=feature.contains(document.activeElement);
@@ -179,8 +179,9 @@ function selectTerritory(item,type,{focus=false,reveal=false}={}) {
     }
   }
 }
-function focusPoint(point, magnification=5) {
+function focusPoint(point, magnification=5, label='') {
   locatedPoint=point;
+  locatedPointLabel=label;
   centerOn(point,Math.max(magnification,zoom));
   revealMap();
 }
@@ -522,7 +523,7 @@ function openSearchResult(result) {
   else if (observationLayers[result.type]) {
     clearSearch();focusPoint(result.item.point,8);showObservationFeature(result.type,result.item);
   } else if (result.type==='commune') {
-    clearSearch();focusPoint(result.item.point,8);showFeature({type:'commune',item:result.item});
+    clearSearch();focusPoint(result.item.point,8,result.item.name);showFeature({type:'commune',item:result.item});
   } else selectTerritory(result.item,result.type,{focus:true,reveal:true});
 }
 function searchKey(event) {
@@ -692,7 +693,7 @@ function showFeature({type,item}) {
   if (type==='commune') supplementary.push(textLink('Fiche de la commune · API officielle','https://geo.api.gouv.fr/communes/'+encodeURIComponent(item.code)));
   if (type==='industry'||type==='farm') supplementary.push(textLink('Voir la fiche Géorisques','https://www.georisques.gouv.fr/risques/installations/donnees/details/'+encodeURIComponent(item.id)));
   if (type==='flow' && item.station) supplementary.push(textLink('Voir la station sur HydroPortail','https://www.hydro.eaufrance.fr/stationhydro/'+encodeURIComponent(item.station||item.site)+'/fiche'));
-  if (item.point) actions.push(makeButton('Localiser cet élément','text-button',()=>focusPoint(item.point,8)));
+  if (item.point) actions.push(makeButton('Localiser cet élément','text-button',()=>focusPoint(item.point,8,type==='commune'?item.name:'')));
   if (type==='watershed') actions.push(makeButton('Cadrer le bassin versant','text-button',()=>frameBounds(item.box)));
   if (type==='department'||type==='region') actions.push(makeButton('Voir les bassins en commun','text-button',()=>selectTerritory(item,type,{focus:true,reveal:true})));
   if (item.link && selected?.id!==item.link[0]) {

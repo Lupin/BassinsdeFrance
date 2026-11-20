@@ -271,7 +271,7 @@ function saveCurrentView(name, thumbnail) {
   const view = {version:1,id:globalThis.crypto?.randomUUID?.() || Date.now().toString(36)+'-'+Math.random().toString(36).slice(2),
     name,savedAt:new Date().toISOString(),thumbnail,center:unproject(world(w/2,h/2)),zoom,controls,playing,basin,river:selected?.id || null,
     territory:currentTerritory && {type:currentTerritory.type,id:currentTerritory.item.code},
-    point:locatedPoint && unproject(locatedPoint),watershed:!!localWatershed};
+    point:locatedPoint && unproject(locatedPoint),pointLabel:locatedPointLabel||'',watershed:!!localWatershed};
   localStorage.setItem(exportStorageKey,JSON.stringify([view,...views]));
 }
 
@@ -308,7 +308,7 @@ async function restoreSavedView(view) {
   if (Array.isArray(view.point) && view.point.length===2 && view.point.every(Number.isFinite)) {
     const point = project(...view.point);
     if (view.watershed) showWatershed(point);
-    else { locatedPoint=point; invalidate(); }
+    else { locatedPoint=point; locatedPointLabel=typeof view.pointLabel==='string'?view.pointLabel.slice(0,100):''; invalidate(); }
   }
   return 'Vue « '+view.name+' » réouverte.'+loadingNotice;
 }
@@ -339,7 +339,7 @@ function initMapExport() {
   let capturedGround = 'none', previewReady = false;
   let previewLegendKey = '';
   const format = () => $('input[name="exportFormat"]:checked').value;
-  const viewSignature=view=>JSON.stringify([view.name,view.center,view.zoom,view.controls,view.basin,view.river,view.territory,view.point]);
+  const viewSignature=view=>JSON.stringify([view.name,view.center,view.zoom,view.controls,view.basin,view.river,view.territory,view.point,view.pointLabel]);
   const style = () => mode==='save' || (format()!=='svg' && ground.value==='current') ? capturedGround : 'none';
   const includeFlood = () => mode==='save' || format()!=='svg';
 
