@@ -874,6 +874,19 @@ function initExplorer() {
   $('#plus').onclick=()=>zoomAt(1.4);
   $('#minus').onclick=()=>zoomAt(1/1.4);
   $('#reset').onclick=resetMap;
+  const panToggle=$('#panToggle'), panTools=$('#mapPanTools');
+  panToggle.addEventListener('click',()=>{
+    const expanded=panToggle.getAttribute('aria-expanded')==='true';
+    panToggle.setAttribute('aria-expanded',String(!expanded));
+    panTools.hidden=expanded;
+    panToggle.setAttribute('aria-label',expanded?'Afficher les commandes de déplacement':'Masquer les commandes de déplacement');
+  });
+  const panControls=[['panNorth',0,1],['panEast',-1,0],['panSouth',0,-1],['panWest',1,0]];
+  for (const [id,dx,dy] of panControls) $('#'+id).addEventListener('click',()=>{
+    const step=Math.max(45,Math.round(Math.min(220,(dx?w:h)*.28)));
+    panMap(dx*step,dy*step);
+    closeChoices();invalidate();
+  });
   $('#clear').onclick=clearSelection;
   $('#about').onclick=()=>$('#sources').showModal();
   $('#closeDialog').onclick=()=>$('#sources').close();

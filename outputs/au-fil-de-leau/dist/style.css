@@ -110,6 +110,25 @@ select { min-height: 34px; border: 1px solid #c4d0d8; color: var(--ink); backgro
 #flowCanvas { z-index: 2; pointer-events: none; }
 #vectorMap { z-index: 0; pointer-events: none; overflow: hidden; }
 #vectorMap canvas { display: block; position: absolute; top: 0; left: 0; }
+.map-icon-defs { position: absolute; width: 0; height: 0; overflow: hidden; pointer-events: none; }
+.map-pan-controls { position: absolute; top: 133px; right: 14px; z-index: 3; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.map-pan-toggle { display: grid; place-items: center; width: 37px; height: 37px; padding: 0; border: 1px solid #b9c9d3;
+  border-radius: 4px; color: #111; background: #fff; box-shadow: 0 2px 8px #152e4914; }
+.map-pan-tools { display: grid; grid-template-columns: 37px; grid-template-rows: repeat(4, 37px); gap: 0;
+  border: 1px solid #b9c9d3; border-radius: 5px; overflow: hidden; box-shadow: 0 2px 8px #152e4914; }
+.map-pan-tools[hidden] { display: none; }
+.map-pan-tools button { display: grid; place-items: center; width: 37px; height: 37px; padding: 0;
+  border: 0; border-bottom: 1px solid #b9c9d3; border-radius: 0; color: #111; background: #fff; box-shadow: none; }
+.map-pan-tools button:last-child { border-bottom: 0; }
+.map-pan-controls svg { display: block; width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8;
+  stroke-linecap: round; stroke-linejoin: round; }
+.map-pan-toggle:hover { background: #f2f6f8; }
+.map-pan-tools button:hover { background: #f2f6f8; }
+.map-pan-toggle:focus-visible, .map-pan-tools button:focus-visible { outline: 2px solid #2573aa; outline-offset: 1px; }
+#panNorth { grid-column: 1; grid-row: 1; }
+#panWest { grid-column: 1; grid-row: 2; }
+#panEast { grid-column: 1; grid-row: 3; }
+#panSouth { grid-column: 1; grid-row: 4; }
 .map-tools { position: absolute; top: 14px; right: 14px; z-index: 3; display: grid; border: 1px solid #b9c9d3;
   border-radius: 5px; overflow: hidden; box-shadow: 0 2px 8px #152e4914; }
 .map-tools button { font-size: 1.18rem; width: 37px; height: 37px; padding: 0; border: none; border-bottom: 1px solid var(--line); }
@@ -244,7 +263,12 @@ dialog p { margin: .4rem 0; font-size: .88rem; }
   .map-toolbar { min-height: 38px; padding: .35rem .72rem; }
   .map-toolbar h2 { font-size: .83rem; }
   #visibleCount { font-size: .72rem; }
-  #mapbox { flex: none; height: clamp(300px,49vh,510px); height: clamp(300px,49dvh,510px); min-height: 300px; }
+  #mapbox { flex: none; height: clamp(350px,49vh,510px); height: clamp(350px,49dvh,510px); min-height: 350px; }
+  .map-pan-controls { top: 137px; right: 9px; }
+  .map-pan-toggle { width: 40px; height: 40px; }
+  .map-pan-tools { grid-template-columns: 40px; grid-template-rows: repeat(4, 40px); }
+  .map-pan-tools button { width: 40px; height: 40px; }
+  .map-pan-controls svg { width: 18px; height: 18px; }
   .map-tools { top: 9px; right: 9px; }
   .map-tools button { width: 40px; height: 40px; }
   .animation-note { display: none; }

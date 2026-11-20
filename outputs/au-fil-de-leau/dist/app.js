@@ -194,6 +194,7 @@ function zoomAt(factor,x=w/2,y=h/2) {
   ty = y-oy-(y-oy-ty)*zoom/old;
   invalidate();
 }
+function panMap(dx,dy) { tx += dx; ty += dy; }
 function resetMap() { zoom = 1; tx = ty = 0; invalidate(); }
 function setText(element, value) { if (element.textContent !== value) element.textContent = value; }
 
@@ -742,7 +743,7 @@ canvas.addEventListener('wheel',event=>{
 },{passive:false});
 canvas.addEventListener('keydown',event=>{
   const actions={'+':()=>zoomAt(1.3),'=':()=>zoomAt(1.3),'-':()=>zoomAt(1/1.3),Home:resetMap,
-    ArrowLeft:()=>{tx+=45;},ArrowRight:()=>{tx-=45;},ArrowUp:()=>{ty+=45;},ArrowDown:()=>{ty-=45;}};
+    ArrowLeft:()=>panMap(45,0),ArrowRight:()=>panMap(-45,0),ArrowUp:()=>panMap(0,45),ArrowDown:()=>panMap(0,-45)};
   if (!actions[event.key]) return;
   event.preventDefault();actions[event.key]();closeChoices();invalidate();
 });

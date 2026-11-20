@@ -218,7 +218,23 @@
       </div>
       <div id="mapbox">
         <div id="vectorMap" hidden aria-hidden="true"></div>
-        <canvas id="map" aria-label="Carte des cours d’eau. Utilisez les flèches pour vous déplacer et les touches plus et moins pour zoomer. La recherche permet de sélectionner un lieu au clavier." tabindex="0"></canvas>
+        <canvas id="map" aria-label="Carte des cours d’eau. Les flèches du clavier ou les commandes directionnelles permettent de parcourir la carte. Les touches plus et moins permettent de zoomer. La recherche permet de sélectionner un lieu au clavier." tabindex="0"></canvas>
+        <svg class="map-icon-defs" aria-hidden="true" focusable="false"><defs>
+          <symbol id="icon-move" viewBox="0 0 24 24"><path d="M12 2v20"/><path d="m15 19-3 3-3-3"/><path d="m19 9 3 3-3 3"/><path d="M2 12h20"/><path d="m5 9-3 3 3 3"/><path d="m9 5 3-3 3 3"/></symbol>
+          <symbol id="icon-arrow-up" viewBox="0 0 24 24"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></symbol>
+          <symbol id="icon-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+          <symbol id="icon-arrow-down" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></symbol>
+          <symbol id="icon-arrow-left" viewBox="0 0 24 24"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></symbol>
+        </defs></svg>
+        <div class="map-pan-controls">
+          <button id="panToggle" class="map-pan-toggle" type="button" aria-label="Afficher les commandes de déplacement" title="Navigation de la carte" aria-expanded="false" aria-controls="mapPanTools"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-move"/></svg></button>
+          <div id="mapPanTools" class="map-pan-tools" role="group" aria-label="Déplacement de la carte" hidden>
+            <button id="panNorth" type="button" aria-label="Déplacer la carte vers le nord"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-arrow-up"/></svg></button>
+            <button id="panEast" type="button" aria-label="Déplacer la carte vers l’est"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-arrow-right"/></svg></button>
+            <button id="panSouth" type="button" aria-label="Déplacer la carte vers le sud"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-arrow-down"/></svg></button>
+            <button id="panWest" type="button" aria-label="Déplacer la carte vers l’ouest"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-arrow-left"/></svg></button>
+          </div>
+        </div>
         <div class="map-tools" aria-label="Navigation de la carte">
           <button id="plus" aria-label="Zoomer">+</button>
           <button id="minus" aria-label="Dézoomer">−</button>
