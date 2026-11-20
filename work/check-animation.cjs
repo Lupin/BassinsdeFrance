@@ -1,11 +1,43 @@
-const vm=require('vm'),fs=require('fs');const nodes=new Map();function elem(){return {value:'2',checked:false,width:900,height:800,style:{setProperty(){}},classList:{},append(){},replaceChildren(){},setAttribute(){},addEventListener(){},getBoundingClientRect(){return {width:900,height:800}},getContext(){return new Proxy({},{get:(t,k)=>t[k]||(()=>{})})}}}const context={window:{},document:{querySelector(s){if(!nodes.has(s))nodes.set(s,elem());return nodes.get(s)},createElement:elem,createTextNode:x=>x},Path2D:class{moveTo(){}lineTo(){}closePath(){}},ResizeObserver:class{observe(){}},matchMedia:()=>({matches:false}),requestAnimationFrame(){},performance:{now:()=>0},devicePixelRatio:1,console};vm.createContext(context);vm.runInContext(fs.readFileSync('outputs/au-fil-de-leau/dist/data.js','utf8'),context);vm.runInContext(fs.readFileSync('outputs/au-fil-de-leau/dist/admin.js','utf8'),context);vm.runInContext(fs.readFileSync('outputs/au-fil-de-leau/dist/app.js','utf8'),context);vm.runInContext(`
-const animationChecks=[];
-for(const level of [1,3,6,12]){
- zoomAt(level/zoom);const frames=[];let currentDots=[];
- ctx.arc=(x,y,r)=>{let sx=ox+tx+x*scale*zoom,sy=oy+ty+y*scale*zoom;if(sx>=0&&sx<=w&&sy>=0&&sy<=h)currentDots.push([sx,sy,r*scale*zoom])};
- frame(1000);frames.push(currentDots);currentDots=[];frame(1500);frames.push(currentDots);
- let motion=frames[0].some((p,i)=>frames[1][i]&&Math.hypot(p[0]-frames[1][i][0],p[1]-frames[1][i][1])>.1);
- if(!frames[0].length||!motion)throw new Error('Animation absente au zoom '+level);
- animationChecks.push({zoom:level,visibleParticles:frames[0].length,motion,screenRadius:frames[0][0][2]});
-}
-console.log(JSON.stringify(animationChecks,null,2));`,context);
+'use strict';
+
+const assert = require('node:assert/strict');
+const { evaluate } = require('./check-map-context.cjs');
+
+const results = evaluate(`(() => {
+  const levels = [1, 3, 6, 12];
+  const checks = [];
+  let clock = 1000;
+
+  for (const level of levels) {
+    zoomAt(level / zoom);
+    const frames = [];
+    let currentDots = [];
+    fx.arc = (x, y, radius) => {
+      const screenX = ox + tx + x * scale * zoom;
+      const screenY = oy + ty + y * scale * zoom;
+      if (screenX >= 0 && screenX <= w && screenY >= 0 && screenY <= h) {
+        currentDots.push([screenX, screenY, radius * scale * zoom]);
+      }
+    };
+
+    renderFrame(clock += 500);
+    frames.push(currentDots);
+    currentDots = [];
+    renderFrame(clock += 500);
+    frames.push(currentDots);
+
+    const moved = frames[0].some((dot, index) => {
+      const next = frames[1][index];
+      return next && Math.hypot(dot[0] - next[0], dot[1] - next[1]) > 0.1;
+    });
+    if (!frames[0].length || !moved) {
+      throw new Error('Écoulement absent ou immobile au zoom ' + level);
+    }
+    checks.push({ zoom: level, visibleParticles: frames[0].length, moved });
+  }
+  return checks;
+})()`);
+
+assert.deepEqual(JSON.parse(JSON.stringify(results)).map(item => item.zoom), [1, 3, 6, 12]);
+console.log('Animation vérifiée à quatre niveaux de zoom :');
+console.log(JSON.stringify(results, null, 2));

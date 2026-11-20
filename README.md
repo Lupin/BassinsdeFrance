@@ -28,6 +28,10 @@ Ouvrez `index.html` dans un navigateur récent, ou servez la racine avec `python
 
 `python3 work/package.py` reconstruit l’entrée GitHub Pages et l’export autonome `outputs/carte-cours-eau-france.html`. Les sources de l’interface et les données préparées résident dans `outputs/au-fil-de-leau/dist/`. Pour régénérer les couches à partir des données brutes locales dans `work/data/`, exécutez `work/build-layers.py`, puis `work/build-crossings.py` avec Shapely 2 et pyproj. `work/build-topology.py` extrait les tronçons du secteur pilote depuis le Sandre.
 
+## Vérification locale
+
+Avec Node.js 20 ou plus récent et Python 3, lancez `node work/check-all.cjs`. Le contrôle vérifie la syntaxe de tous les scripts, les repères HTML/accessibilité de base, le déplacement des particules à quatre niveaux de zoom, la continuité des 48 parcours documentés, l’accord du compteur de recoupements et les filtres des couches d’observation.
+
 ## Publication
 
 Le site est publié avec GitHub Pages depuis la racine de la branche `main`.
@@ -50,4 +54,4 @@ La visibilité des tracés, de leurs noms et de leur animation se règle de 0 à
 
 Les vues enregistrées et les exports reprennent les filtres, les périodes et la visibilité du réseau. Les données sont des extractions datées et se chargent à la première activation. Les enregistrements manquants restent distingués des volumes nuls et des observations d’assec.
 
-Régénérer les données avec `python3 work/build-water-observations.py`, puis `python3 work/package.py`. Le script vérifie la pagination complète et réduit les répétitions textuelles dans les fichiers. Les réponses brutes sont mises en cache dans `/tmp/bassins-hubeau-cache`. `node work/check-observations.cjs` vérifie le calcul des volumes filtrés, les périodes, les médianes et les absences d’observation.
+Régénérer les données avec `python3 work/build-water-observations.py`, puis `python3 work/package.py`. Le script vérifie la pagination complète et réduit les répétitions textuelles dans les fichiers. Les réponses brutes sont mises en cache dans `/tmp/bassins-hubeau-cache`. `node work/check-all.cjs` vérifie les calculs de volumes filtrés, les périodes, les médianes et les absences d’observation en plus des contrôles généraux décrits ci-dessus.

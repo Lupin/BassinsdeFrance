@@ -118,6 +118,9 @@ function textLink(label,url) {
   return a;
 }
 function setMapTitle() { setText($('#viewtitle'),basinById.get(basin)?.name || 'Tous les bassins'); }
+function crossingCountSummary(count) {
+  return number.format(count)+(count===1?' recoupement':' recoupements')+' d’au moins 1 km².';
+}
 function selectBasin(id, {frame=true}={}) {
   basin=id; selected=null; currentTerritory=null;
   clearContext();
@@ -311,7 +314,7 @@ function compareTerritories(container, territory=null) {
       ? row.code===territory.item.code
       : row.basin===id && row.code.startsWith('r-')===(territoryMode==='region'));
     content.append(node('p',matches.length
-      ? number.format(matches.length)+' recoupements d’au moins 1 km². La part affichée se rapporte au territoire administratif.'
+      ? crossingCountSummary(matches.length)+' La part affichée se rapporte au territoire administratif.'
       : 'Aucun recoupement d’au moins 1 km².','note'));
     const list=node('div',null,'compare-list');
     for (const row of matches) {
