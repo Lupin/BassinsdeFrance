@@ -179,7 +179,7 @@ select { min-height: 34px; border: 1px solid #c4d0d8; color: var(--ink); backgro
 .compact-list { max-height: 235px; overflow: auto; scrollbar-width: thin; }
 #featureDetail { border: 1px solid #b7cbd7; border-inline-start: 4px solid var(--blue); border-radius: 5px; margin: 0 0 1rem; padding: .65rem .75rem; background: #f7fafb; position: relative; box-shadow: 0 2px 8px #1832450c; }
 #featureDetail h3 { padding-right: 1.65rem; margin: .1rem 0 .5rem; font-size: 1.05rem; line-height: 1.3; overflow-wrap: anywhere; }
-#featureDetail h3:focus { outline: 2px solid #176ba5; outline-offset: 3px; border-radius: 2px; }
+#featureDetail h3:focus-visible { outline: 2px solid #176ba5; outline-offset: 3px; border-radius: 2px; }
 .feature-layer-label { margin: 0; color: var(--muted); font-size: .72rem; font-weight: 650; letter-spacing: .025em; }
 #featureDetail .feature-more { border-top: 1px solid var(--line); margin-top: .45rem; }
 #featureDetail .feature-more > summary { min-height: 44px; display: flex; align-items: center; color: var(--blue); font-size: .82rem; font-weight: 650; cursor: pointer; }
