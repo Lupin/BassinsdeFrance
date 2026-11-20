@@ -243,13 +243,35 @@ function readSavedViews() {
     Number.isFinite(view.zoom) && view.controls && typeof view.controls==='object') : [];
 }
 
-function saveCurrentView(name) {
+function viewThumbnail(source) {
+  if (!source?.width || !source?.height) return '';
+  const width=240,height=145,ratio=Math.min(width/source.width,height/source.height);
+  const thumbnail=document.createElement('canvas');
+  thumbnail.width=width;thumbnail.height=height;
+  const context=thumbnail.getContext('2d',{alpha:false});
+  context.fillStyle='#f2f5f6';context.fillRect(0,0,width,height);
+  context.drawImage(source,(width-source.width*ratio)/2,(height-source.height*ratio)/2,source.width*ratio,source.height*ratio);
+  let data=thumbnail.toDataURL('image/webp',.62);
+  if (!data.startsWith('data:image/webp,')) data=thumbnail.toDataURL('image/png');
+  if (data.length>90000) {
+    thumbnail.width=180;thumbnail.height=110;
+    const small=thumbnail.getContext('2d',{alpha:false});
+    small.fillStyle='#f2f5f6';small.fillRect(0,0,180,110);
+    const smallRatio=Math.min(180/source.width,110/source.height);
+    small.drawImage(source,(180-source.width*smallRatio)/2,(110-source.height*smallRatio)/2,source.width*smallRatio,source.height*smallRatio);
+    data=thumbnail.toDataURL('image/webp',.48);
+    if (!data.startsWith('data:image/webp,')) data=thumbnail.toDataURL('image/png');
+  }
+  return data.length<=90000 ? data : '';
+}
+
+function saveCurrentView(name, thumbnail) {
   const views = readSavedViews();
   const controls = Object.fromEntries(exportControls.map(input=>[input.id,input.type==='checkbox'?input.checked:input.value]));
-  const view = {version:1,name,center:unproject(world(w/2,h/2)),zoom,controls,playing,basin,river:selected?.id || null,
+  const view = {version:1,id:globalThis.crypto?.randomUUID?.() || Date.now().toString(36)+'-'+Math.random().toString(36).slice(2),
+    name,savedAt:new Date().toISOString(),thumbnail,center:unproject(world(w/2,h/2)),zoom,controls,playing,basin,river:selected?.id || null,
     territory:currentTerritory && {type:currentTerritory.type,id:currentTerritory.item.code},
     point:locatedPoint && unproject(locatedPoint),watershed:!!localWatershed};
-  // Named views are kept as individual entries so a save never replaces an older one.
   localStorage.setItem(exportStorageKey,JSON.stringify([view,...views]));
 }
 
@@ -310,8 +332,8 @@ function initMapExport() {
   const error = $('#exportProblem'), retry = $('#exportRetry'), button = $('#exportDownload');
   const ground = $('#exportGround'), alt = $('#exportAlt'), resolution = $('#exportResolution');
   const title = $('#exportTitle'), legendToggle = $('#exportLegend');
-  const filePanel = $('#exportFilePanel'), savePanel = $('#exportSavePanel');
-  const fileMode = $('#exportFileMode'), saveMode = $('#exportSaveMode');
+  const filePanel = $('#exportFilePanel'), savePanel = $('#exportSavePanel'), galleryPanel = $('#exportGalleryPanel');
+  const fileMode = $('#exportFileMode'), saveMode = $('#exportSaveMode'), viewsMode = $('#exportViewsMode');
   let mode = 'file', generation = 0, previewKey = '', busy = false;
   let returnFocus = opener;
   let capturedGround = 'none', previewReady = false;
@@ -365,6 +387,7 @@ function initMapExport() {
     setText($('#exportDimensions'),saved?'Vue actuelle':print?'PDF · A4 '+page:vector?'SVG · cadrage actuel':'PNG · carte '+number.format(width)+' × '+number.format(height)+' px');
     setText(button,'Télécharger le '+fileType.toUpperCase());
     button.disabled = !previewReady || busy;
+    $('#exportSaveSubmit').disabled = !previewReady || busy;
   }
 
   async function refreshPreview(force=false) {
@@ -394,7 +417,7 @@ function initMapExport() {
     } catch (problem) {
       if (run!==generation) return;
       error.textContent = problem.message;
-      if (mode==='save') status.textContent = problem.message+' Les réglages peuvent être enregistrés.';
+      if (mode==='save') status.textContent = problem.message;
       else status.textContent = '';
       retry.hidden = false;
     }
@@ -407,7 +430,7 @@ function initMapExport() {
     try { saved = readSavedViews(); }
     catch { status.textContent = 'Les vues enregistrées sont inaccessibles dans ce navigateur.'; }
     $('#exportNoViews').hidden = !!saved.length;
-    list.replaceChildren(...saved.map(view => {
+    list.replaceChildren(...saved.map((view,index) => {
       const li = node('li');
       const restore = makeButton('Afficher','export-button',async () => {
         if (busy) return;
@@ -415,29 +438,86 @@ function initMapExport() {
         try {
           dialog.close();
           restoredStatus.textContent = await restoreSavedView(view);
+          if (!view.thumbnail) void captureSavedViewThumbnail(view,index);
         } catch { restoredStatus.textContent = 'Cette vue n’a pas pu être réouverte.'; }
         finally { busy = false; }
       });
       restore.setAttribute('aria-label','Afficher la vue '+view.name);
+      let thumbnail;
+      if (typeof view.thumbnail==='string' && /^data:image\/(?:webp|png);base64,/.test(view.thumbnail) && view.thumbnail.length<=90000) {
+        thumbnail=node('img',null,'saved-view-thumbnail');
+        thumbnail.src=view.thumbnail;
+        thumbnail.alt='Aperçu de la vue « '+view.name+' »';
+        thumbnail.loading='lazy';
+        thumbnail.decoding='async';
+      } else {
+        thumbnail=node('div',null,'saved-view-thumbnail saved-view-thumbnail--empty');
+        thumbnail.setAttribute('role','img');
+        thumbnail.setAttribute('aria-label','Aperçu non disponible. Il sera créé à la prochaine ouverture de cette vue.');
+        thumbnail.append(node('span','Aperçu à créer'));
+      }
       const label=node('div',null,'saved-view-label');
       label.append(node('strong',view.name));
       const count=Object.entries(view.controls).filter(([id,value])=>value===true && (id.startsWith('water-') || ['flowsLayer','protectedLayer','aquiferLayer','watersheds','floodLayer','hydroDams','nuclearPlants'].includes(id))).length;
       const groundLabel=[...$('#basemap').options].find(option=>option.value===view.controls.basemap)?.text || '';
-      label.append(node('span',[groundLabel,count+' couche'+(count>1?'s':'')].filter(Boolean).join(' · ')));
-      li.append(label,restore);
+      const savedDate=Date.parse(view.savedAt || '');
+      const dateLabel=Number.isFinite(savedDate) ? new Intl.DateTimeFormat('fr-FR',{dateStyle:'medium'}).format(savedDate) : '';
+      label.append(node('span',[groundLabel,count+' couche'+(count>1?'s':''),dateLabel].filter(Boolean).join(' · ')));
+      const content=node('div',null,'saved-view-content');
+      content.append(label,restore);
+      li.className='saved-view-card';
+      li.append(thumbnail,content);
       return li;
     }));
   }
 
+  function restoredViewStillOpen(view) {
+    if (basin!==view.basin || Math.abs(zoom-view.zoom)>.001) return false;
+    const center=unproject(world(w/2,h/2));
+    if (Math.abs(center[0]-view.center[0])>.01 || Math.abs(center[1]-view.center[1])>.01) return false;
+    for (const input of exportControls) {
+      if (!(input.id in view.controls)) continue;
+      const expected=view.controls[input.id];
+      const actual=input.type==='checkbox'?input.checked:input.value;
+      if (actual!==expected && input.dataset.pendingValue!==expected) return false;
+    }
+    return true;
+  }
+
+  async function captureSavedViewThumbnail(view,index) {
+    for (let attempt=0;attempt<16;attempt++) {
+      await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+      if (!restoredViewStillOpen(view)) return;
+      try {
+        const rendered=await rasterExportMap(360,$('#basemap').value,true);
+        const thumbnail=viewThumbnail(rendered);
+        rendered.width=rendered.height=1;
+        if (!thumbnail || !restoredViewStillOpen(view)) return;
+        const views=readSavedViews(), id=view.id;
+        const signature=item=>JSON.stringify([item.name,item.center,item.zoom,item.controls,item.basin,item.river,item.territory,item.point]);
+        const target=id ? views.findIndex(item=>item.id===id) : views.findIndex(item=>signature(item)===signature(view));
+        if (target<0 || !views[target] || views[target].thumbnail) return;
+        views[target].thumbnail=thumbnail;
+        localStorage.setItem(exportStorageKey,JSON.stringify(views));
+        if (dialog.open && mode==='views') loadViewList();
+        return;
+      } catch {
+        await new Promise(resolve=>setTimeout(resolve,300));
+      }
+    }
+  }
+
   function switchMode(next) {
     mode = next;
-    filePanel.hidden = next!=='file'; savePanel.hidden = next!=='save';
+    filePanel.hidden = next!=='file'; savePanel.hidden = next!=='save'; galleryPanel.hidden = next!=='views';
+    $('#exportModes').hidden = next==='views';
     fileMode.setAttribute('aria-pressed',String(next==='file'));
     saveMode.setAttribute('aria-pressed',String(next==='save'));
-    $('.export-preview').hidden = next==='save';
+    viewsMode.setAttribute('aria-pressed',String(next==='views'));
+    $('.export-preview').hidden = next==='views';
     $('.export-grid').dataset.mode = next;
-    setText($('#exportHeading'),next==='save'?'Mes vues':'Exporter la carte');
-    if (next==='save') {
+    setText($('#exportHeading'),next==='views'?'Vues enregistrées':'Enregistrer ou exporter la carte');
+    if (next==='views') {
       generation++;
       previewKey='';
       status.textContent='';
@@ -468,7 +548,7 @@ function initMapExport() {
     switchMode(next);
   }
   opener.addEventListener('click',()=>openPanel('file',opener));
-  $('#savedViewsOpen').addEventListener('click',()=>openPanel('save',$('#savedViewsOpen')));
+  $('#savedViewsOpen').addEventListener('click',()=>openPanel('views',$('#savedViewsOpen')));
   $('#exportClose').addEventListener('click',()=>dialog.close());
   dialog.addEventListener('close',() => {
     generation++;
@@ -484,6 +564,9 @@ function initMapExport() {
   }).observe($('#mapbox'));
   fileMode.addEventListener('click',()=>switchMode('file'));
   saveMode.addEventListener('click',()=>switchMode('save'));
+  viewsMode.addEventListener('click',()=>switchMode('views'));
+  saveMode.addEventListener('click',()=>$('#exportViewName').focus());
+  $('#exportGallerySave').addEventListener('click',()=>{switchMode('save');$('#exportViewName').focus();});
   retry.addEventListener('click',()=>refreshPreview(true));
   filePanel.addEventListener('change',event => {
     if (event.target.name==='exportFormat' || event.target===ground) refreshPreview();
@@ -500,7 +583,7 @@ function initMapExport() {
       status.textContent = 'Le texte est sélectionné. Utilisez le raccourci de copie de votre appareil.';
     }
   });
-  $('#exportSaveForm').addEventListener('submit',event => {
+  savePanel.addEventListener('submit',event => {
     event.preventDefault();
     const name = $('#exportViewName').value.trim();
     if (!name) {
@@ -509,10 +592,16 @@ function initMapExport() {
       return;
     }
     try {
-      saveCurrentView(name);
-      loadViewList();
+      const thumbnail=viewThumbnail(canvasPreview);
+      if (!thumbnail) throw new Error('Aperçu indisponible');
+      saveCurrentView(name,thumbnail);
       status.textContent = 'Vue « '+name+' » enregistrée.';
-    } catch { status.textContent = 'Le navigateur n’a pas pu enregistrer la vue sur cet appareil.'; }
+      saveMode.setAttribute('aria-pressed','false');
+      viewsMode.setAttribute('aria-pressed','true');
+      switchMode('views');
+      status.textContent = 'Vue « '+name+' » enregistrée avec son aperçu.';
+      $('#exportGallerySave').focus();
+    } catch { status.textContent = 'Le navigateur n’a pas pu enregistrer cette vue avec son aperçu.'; }
   });
   filePanel.addEventListener('submit',async event => {
     event.preventDefault();

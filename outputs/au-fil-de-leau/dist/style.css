@@ -283,7 +283,7 @@ dialog p { margin: .4rem 0; font-size: .88rem; }
   background: var(--paper);
 }
 #mapExport::backdrop { background: #142b40a1; }
-#mapExport :focus-visible, #exportOpen:focus-visible { outline: 3px solid #176ba5; outline-offset: 2px; }
+#mapExport :focus-visible, #exportOpen:focus-visible, #savedViewsOpen:focus-visible { outline: 3px solid #176ba5; outline-offset: 2px; }
 #mapExport .note { margin: 0; }
 #mapExport h2 { font-size: clamp(1.18rem, 3vw, 1.6rem); line-height: 1.2; }
 #mapExport h3 { font-size: .96rem; }
@@ -318,7 +318,7 @@ dialog p { margin: .4rem 0; font-size: .88rem; }
 .export-swatch[data-shape=area] { width: 10px; height: 8px; border: 1px solid currentColor; }
 .export-swatch[data-shape=dash] { width: 13px; height: 0; background: none; border-top: 2px dashed var(--export-swatch); }
 #exportPreviewCredits { color: var(--muted); }
-#exportFilePanel, #exportSaveForm, #exportSavePanel { display: grid; align-content: start; gap: .7rem; min-width: 0; }
+#exportFilePanel, #exportSavePanel { display: grid; align-content: start; gap: .7rem; min-width: 0; }
 .export-field { display: grid; gap: .25rem; min-width: 0; font-size: .875rem; font-weight: 650; }
 .export-field :is(input,select,textarea) {
   box-sizing: border-box;
@@ -353,9 +353,14 @@ dialog p { margin: .4rem 0; font-size: .88rem; }
 .export-description summary { color: var(--blue); min-height: 44px; padding: .6rem 0; font-size: .875rem; font-weight: 650; }
 #exportAltHint, #exportCopyGroup { margin-top: .35rem; }
 .export-problem:not(:empty) { border-inline-start: 3px solid #9d2439; padding-inline-start: .5rem; color: #7d1b2d; }
-#exportSavedList { list-style: none; margin: 0; padding: 0; }
-#exportSavedList li { display: flex; justify-content: space-between; gap: .35rem; align-items: center; padding: .3rem 0; border-top: 1px solid var(--line); }
-#exportSavedList span { overflow-wrap: anywhere; }
+#exportGalleryPanel { min-width: 0; }
+.saved-views-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .7rem; margin-bottom: .8rem; }
+.saved-views-header h3, .saved-views-header p { margin-block: .2rem; }
+#exportSavedList { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .65rem; max-height: min(58vh,560px); overflow: auto; list-style: none; margin: 0; padding: .15rem; }
+.saved-view-card { display: grid; grid-template-columns: minmax(105px,.8fr) minmax(0,1fr); gap: .75rem; align-items: center; min-width: 0; padding: .5rem; border: 1px solid #b9c9d3; border-radius: 5px; }
+.saved-view-thumbnail { display: block; width: 100%; aspect-ratio: 12 / 7; object-fit: contain; border: 1px solid #d4dfe4; border-radius: 3px; background: #f2f5f6; }
+.saved-view-thumbnail--empty { display: grid; place-items: center; padding: .4rem; color: var(--muted); text-align: center; font-size: .75rem; }
+.saved-view-content { display: grid; justify-items: start; align-content: center; gap: .5rem; min-width: 0; }
 .export-status { font-size: .875rem; }
 .export-status:not(:empty) { margin-top: .7rem; }
 @media (max-width: 660px) {
@@ -433,11 +438,11 @@ body.map-expanded-open { overflow: hidden; }
   }
 }
 
-.export-grid[data-mode=save] { display: block; }
-.save-current-view { border-top: 1px solid var(--line); margin-top: .5rem; padding-top: .45rem; }
-.save-current-view > summary { min-height: 44px; padding: .5rem 0; color: var(--blue); font-size: .875rem; font-weight: 650; cursor: pointer; }
-.save-current-view form { max-width: 32rem; padding-block: .45rem; }
-#exportSavedList li { padding: .65rem 0; }
+.export-grid[data-mode=views] { display: block; }
 .saved-view-label { min-width: 0; display: grid; gap: .15rem; }
 .saved-view-label strong { font-size: .95rem; overflow-wrap: anywhere; }
 .saved-view-label span { font-size: .8rem; color: var(--muted); }
+@media (max-width: 660px) {
+  #exportSavedList { grid-template-columns: 1fr; max-height: 52vh; }
+  .saved-view-card { grid-template-columns: minmax(95px,.6fr) minmax(0,1fr); }
+}

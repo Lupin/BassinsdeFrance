@@ -199,7 +199,7 @@
         <div class="map-toolbar-actions">
           <span id="visibleCount">Chargement du réseau…</span>
           <button type="button" id="mapFullscreen" class="export-button" aria-pressed="false" aria-controls="mapbox">Plein écran</button>
-          <button type="button" id="savedViewsOpen" class="export-button" aria-haspopup="dialog" aria-controls="mapExport">Mes vues</button>
+          <button type="button" id="savedViewsOpen" class="export-button" aria-haspopup="dialog" aria-controls="mapExport">Vues enregistrées</button>
           <button type="button" id="exportOpen" class="export-button" aria-haspopup="dialog" aria-controls="mapExport">Exporter</button>
         </div>
       </div>
@@ -313,9 +313,10 @@
       <h2 id="exportHeading">Exporter la carte</h2>
       <button type="button" id="exportClose" class="export-button" autofocus>Retour à la carte</button>
     </header>
-    <div class="export-modes" role="group" aria-label="Choisir une action">
-      <button class="export-button" type="button" id="exportSaveMode" aria-pressed="false" aria-controls="exportSavePanel">Mes vues</button>
-      <button class="export-button" type="button" id="exportFileMode" aria-pressed="true" aria-controls="exportFilePanel">Exporter</button>
+    <div class="export-modes" id="exportModes" role="group" aria-label="Choisir une action">
+      <button class="export-button" type="button" id="exportViewsMode" aria-pressed="false" aria-controls="exportGalleryPanel">Vues enregistrées</button>
+      <button class="export-button" type="button" id="exportSaveMode" aria-pressed="false" aria-controls="exportSavePanel">Enregistrer la vue</button>
+      <button class="export-button" type="button" id="exportFileMode" aria-pressed="true" aria-controls="exportFilePanel">Exporter un fichier</button>
     </div>
     <div class="export-grid">
       <section class="export-preview" aria-labelledby="exportPreviewHeading">
@@ -368,26 +369,28 @@
         <p id="exportProblem" class="note export-problem" role="alert"></p>
         <div class="export-modes">
           <button type="submit" id="exportDownload" class="export-button export-primary" disabled>Télécharger le PNG</button>
-          <button type="button" id="exportRetry" class="export-button" hidden>Réessayer l’aperçu</button>
         </div>
       </form>
-      <section id="exportSavePanel" aria-label="Vues enregistrées" hidden>
-        <p class="note">Vos cadrages et réglages conservés dans ce navigateur.</p>
-        <p id="exportNoViews" class="note">Vous n’avez pas encore enregistré de vue.</p>
-        <ul id="exportSavedList" aria-label="Mes vues enregistrées"></ul>
-        <details class="save-current-view">
-          <summary>Enregistrer la vue actuelle</summary>
-          <form id="exportSaveForm">
-            <label class="export-field">Nom de cette vue
-              <input type="text" id="exportViewName" maxlength="100" required>
-            </label>
-            <p class="note">Le cadrage, le zoom, le fond, les couches et leurs filtres seront conservés.</p>
-            <div class="export-modes">
-              <button type="submit" class="export-button export-primary">Enregistrer cette vue</button>
-            </div>
-          </form>
-        </details>
+      <form id="exportSavePanel" aria-label="Enregistrer la vue" hidden>
+        <label class="export-field">Nom de cette vue
+          <input type="text" id="exportViewName" maxlength="100" required>
+        </label>
+        <p class="note">Le cadrage, le zoom, le fond, les couches et leurs filtres seront conservés avec cet aperçu.</p>
+        <button type="submit" id="exportSaveSubmit" class="export-button export-primary" disabled>Enregistrer cette vue</button>
+      </form>
+      <section id="exportGalleryPanel" aria-label="Galerie des vues enregistrées" hidden>
+        <header class="saved-views-header">
+          <div>
+            <p class="note">Aperçus, cadrages et réglages enregistrés dans ce navigateur.</p>
+          </div>
+          <button type="button" id="exportGallerySave" class="export-button export-primary">Enregistrer la vue actuelle</button>
+        </header>
+        <p id="exportNoViews" class="note">Aucune vue enregistrée pour le moment.</p>
+        <ul id="exportSavedList" aria-label="Vues enregistrées"></ul>
       </section>
+    </div>
+    <div class="export-modes export-preview-actions">
+      <button type="button" id="exportRetry" class="export-button" hidden>Réessayer l’aperçu</button>
     </div>
     <p class="export-status" id="exportStatus" role="status" aria-atomic="true"></p>
   </dialog>
