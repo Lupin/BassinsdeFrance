@@ -361,6 +361,10 @@ dialog p { margin: .4rem 0; font-size: .88rem; }
 .saved-view-thumbnail { display: block; width: 100%; aspect-ratio: 12 / 7; object-fit: contain; border: 1px solid #d4dfe4; border-radius: 3px; background: #f2f5f6; }
 .saved-view-thumbnail--empty { display: grid; place-items: center; padding: .4rem; color: var(--muted); text-align: center; font-size: .75rem; }
 .saved-view-content { display: grid; justify-items: start; align-content: center; gap: .5rem; min-width: 0; }
+.saved-view-actions { display: flex; flex-wrap: wrap; gap: .4rem; }
+.saved-view-delete { color: #7d1b2d; border-color: #c58f96; background: #fff; }
+.saved-view-delete-confirm { display: grid; gap: .35rem; color: #7d1b2d; font-size: .8rem; }
+.saved-view-delete-final { color: #fff; border-color: #7d1b2d; background: #7d1b2d; }
 .export-status { font-size: .875rem; }
 .export-status:not(:empty) { margin-top: .7rem; }
 @media (max-width: 660px) {

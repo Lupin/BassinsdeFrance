@@ -12,7 +12,7 @@ Les données de la BD TOPAGE® et les limites administratives sont stockées ave
 
 ## Enregistrer ou exporter une vue
 
-Dans la barre de la carte, **Vues enregistrées** ouvre une galerie avec aperçus, nom, fond et nombre de couches. **Afficher** rétablit une vue et ses réglages dans le navigateur actuel. Le bouton **Exporter** conserve le parcours d’enregistrement avec aperçu, ainsi que l’export PNG, PDF A4 et SVG vectoriel. Les aperçus et réglages sont conservés dans le navigateur utilisé. L’animation est figée dans les fichiers. La description modifiable accompagne le PDF et le SVG. Elle peut être copiée pour le partage d’un PNG.
+Dans la barre de la carte, **Vues enregistrées** ouvre une galerie avec aperçus, nom, fond et nombre de couches. **Afficher** rétablit une vue et ses réglages dans le navigateur actuel; **Supprimer** retire une vue après confirmation. Le bouton **Exporter** conserve le parcours d’enregistrement avec aperçu, ainsi que l’export PNG, PDF A4 et SVG vectoriel. Les aperçus et réglages sont conservés dans le navigateur utilisé. L’animation est figée dans les fichiers. La description modifiable accompagne le PDF et le SVG. Elle peut être copiée pour le partage d’un PNG.
 
 Le PNG et le PDF peuvent inclure le fond actuel si ses tuiles peuvent être lues par le navigateur. Le SVG utilise le fond blanc et les couches vectorielles. Les enveloppes d’inondation, affichées à partir d’images, restent disponibles en PNG et PDF. Les crédits des sources figurent dans chaque fichier.
 

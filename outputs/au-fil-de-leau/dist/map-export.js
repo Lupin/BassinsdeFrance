@@ -339,6 +339,7 @@ function initMapExport() {
   let capturedGround = 'none', previewReady = false;
   let previewLegendKey = '';
   const format = () => $('input[name="exportFormat"]:checked').value;
+  const viewSignature=view=>JSON.stringify([view.name,view.center,view.zoom,view.controls,view.basin,view.river,view.territory,view.point]);
   const style = () => mode==='save' || (format()!=='svg' && ground.value==='current') ? capturedGround : 'none';
   const includeFlood = () => mode==='save' || format()!=='svg';
 
@@ -443,6 +444,43 @@ function initMapExport() {
         finally { busy = false; }
       });
       restore.setAttribute('aria-label','Afficher la vue '+view.name);
+      const actions=node('div',null,'saved-view-actions');
+      actions.append(restore);
+      const remove=makeButton('Supprimer','export-button saved-view-delete',()=>{
+        const confirmation=node('div',null,'saved-view-delete-confirm');
+        confirmation.setAttribute('role','group');
+        confirmation.setAttribute('aria-label','Confirmer la suppression de « '+view.name+' »');
+        confirmation.append(node('span','Supprimer cette vue de ce navigateur ?'));
+        const cancel=makeButton('Annuler','export-button',()=>{actions.replaceChildren(restore,remove);remove.focus();});
+        const confirm=makeButton('Supprimer','export-button saved-view-delete-final',()=>{
+          try {
+            const views=readSavedViews();
+            const target=view.id ? views.findIndex(item=>item.id===view.id) : views.findIndex(item=>viewSignature(item)===viewSignature(view));
+            if (target<0) {
+              status.textContent='Cette vue n’est plus dans la liste.';
+              loadViewList();
+              $('#exportGallerySave').focus();
+              return;
+            }
+            const next=li.nextElementSibling, previous=li.previousElementSibling;
+            views.splice(target,1);
+            localStorage.setItem(exportStorageKey,JSON.stringify(views));
+            li.remove();
+            $('#exportNoViews').hidden=!!views.length;
+            status.textContent='Vue « '+view.name+' » supprimée de ce navigateur.';
+            (next?.querySelector('button') || previous?.querySelector('button') || $('#exportGallerySave')).focus();
+          } catch {
+            status.textContent='Le navigateur n’a pas pu supprimer cette vue.';
+            actions.replaceChildren(restore,remove);
+            remove.focus();
+          }
+        });
+        confirmation.append(cancel,confirm);
+        actions.replaceChildren(confirmation);
+        cancel.focus();
+      });
+      remove.setAttribute('aria-label','Supprimer la vue '+view.name);
+      actions.append(remove);
       let thumbnail;
       if (typeof view.thumbnail==='string' && /^data:image\/(?:webp|png);base64,/.test(view.thumbnail) && view.thumbnail.length<=90000) {
         thumbnail=node('img',null,'saved-view-thumbnail');
@@ -464,7 +502,7 @@ function initMapExport() {
       const dateLabel=Number.isFinite(savedDate) ? new Intl.DateTimeFormat('fr-FR',{dateStyle:'medium'}).format(savedDate) : '';
       label.append(node('span',[groundLabel,count+' couche'+(count>1?'s':''),dateLabel].filter(Boolean).join(' · ')));
       const content=node('div',null,'saved-view-content');
-      content.append(label,restore);
+      content.append(label,actions);
       li.className='saved-view-card';
       li.append(thumbnail,content);
       return li;
@@ -494,8 +532,7 @@ function initMapExport() {
         rendered.width=rendered.height=1;
         if (!thumbnail || !restoredViewStillOpen(view)) return;
         const views=readSavedViews(), id=view.id;
-        const signature=item=>JSON.stringify([item.name,item.center,item.zoom,item.controls,item.basin,item.river,item.territory,item.point]);
-        const target=id ? views.findIndex(item=>item.id===id) : views.findIndex(item=>signature(item)===signature(view));
+        const target=id ? views.findIndex(item=>item.id===id) : views.findIndex(item=>viewSignature(item)===viewSignature(view));
         if (target<0 || !views[target] || views[target].thumbnail) return;
         views[target].thumbnail=thumbnail;
         localStorage.setItem(exportStorageKey,JSON.stringify(views));
