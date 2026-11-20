@@ -356,40 +356,48 @@ function observationHistory(values,label,unit) {
 
 function showObservationFeature(type,item) {
   const holder=$('#featureDetail');
-  const close=makeButton('×','close-button',()=>{holder.hidden=true;});
-  close.setAttribute('aria-label','Fermer cette fiche');
-  holder.dataset.kind=type;holder.replaceChildren(node('h3',item.n),close);
+  holder.dataset.kind=type;featureHeader(holder,type,item.n);
   const date = value=>new Date(value+'T12:00:00Z').toLocaleDateString('fr-FR',{timeZone:'UTC'});
-  let fields=[['Identifiant',item.id],['Commune',item.commune]];
+  let fields=[],note='',supplementary=[],summary='Historique et relevés';
   const data=observationLayers[type].data;
   if (type==='withdrawals') {
     const year=$('#withdrawalYear').value,usage=$('#withdrawalUsage').value;
-    fields.push(['Année',year],['Volume annuel',number.format(item.volume)+' m³'],['Source','BNPE / Hub’Eau'],['Extraction',data.extracted]);
-    holder.append(featureList(fields),node('p','Les volumes sont rattachés à l’ouvrage. La surface des cercles suit le volume, entre une taille minimale et un plafond pour la lisibilité.','note'));
+    const usageLabel=usage==='all'?'Usages déclarés':$('#withdrawalUsage').selectedOptions[0]?.text || usage;
+    fields=[['Volume annuel',number.format(item.volume)+' m³'],['Année',year],['Usage',usageLabel],
+      ['Identifiant',item.id],['Commune',item.commune],['Source','BNPE / Hub’Eau'],['Extraction',data.extracted]];
+    note='Volume déclaré à l’ouvrage. La surface des cercles est bornée pour préserver la lisibilité de la carte.';
+    summary='Historique annuel et relevés';
     const yearly=data.years.map(y=>[String(y),item.rows.filter(row=>row[0]===y && (usage==='all'||usage===row[1])).reduce((sum,row)=>sum+row[2],0)]);
     // Missing years stay absent from the history instead of being shown as zero.
     const observed=yearly.filter(([y])=>item.rows.some(row=>row[0]===Number(y) && (usage==='all'||usage===row[1])));
-    holder.append(observationHistory(observed,'Évolution du volume annuel','m³'),
+    supplementary.push(observationHistory(observed,'Évolution du volume annuel','m³'),
       observationTable(['Année','Usage','Volume m³','Qualification'],item.rows.filter(row=>row[0]===Number(year) && (usage==='all'||usage===row[1])).map(row=>[row[0],withdrawalUsages[row[1]]||row[1],number.format(row[2]),row[3]||'Non renseignée'])));
   } else if(type==='quality') {
     const row=item.latest,parameter=$('#qualityParameter').value,period=$('#qualityMonth').value;
     const label=observationLayers.quality.data.parameters[parameter][0];
-    fields.push(['Paramètre',label],['Dernier jour analysé',date(row[0])],['Valeur représentée',number.format(row[2])+' '+row[4]],
+    fields=[['Paramètre',label],['Valeur représentée',number.format(row[2])+' '+row[4]],['Dernier jour analysé',date(row[0])],
+      ['Commune',item.commune],['Identifiant',item.id],
       ['Analyses ce jour',item.sameDayCount],
-      ['Remarque analytique',row[3]==='1'?'Valeur quantifiée':'Résultat assorti d’une limite · code '+row[3]],['Qualification',row[5]||'Non renseignée'],['Source','Naïades / Hub’Eau'],['Extraction',data.extracted]);
+      ['Remarque analytique',row[3]==='1'?'Valeur quantifiée':'Résultat assorti d’une limite · code '+row[3]],['Qualification',row[5]||'Non renseignée'],['Source','Naïades / Hub’Eau'],['Extraction',data.extracted]];
+    note='La carte représente le dernier jour analysé dans la période. Si plusieurs résultats quantifiés sont disponibles ce jour, leur médiane est utilisée. Les dates varient selon les stations.';
+    summary='Historique des analyses et relevés';
     const rows=item.rows.filter(r=>r[1]===parameter && r[0].startsWith(period));
-    holder.append(featureList(fields),node('p','La couleur représente le dernier jour analysé dans la période. Si plusieurs résultats quantifiés sont disponibles ce jour, leur médiane est représentée. Les dates diffèrent selon les stations.','note'),
-      observationHistory(rows.filter(row=>row[3]==='1' && !/incorrect/i.test(row[5]||'')).map(row=>[row[0],row[2]]),label,row[4]),
+    supplementary.push(observationHistory(rows.filter(row=>row[3]==='1' && !/incorrect/i.test(row[5]||'')).map(row=>[row[0],row[2]]),label,row[4]),
       observationTable(['Date','Résultat','Remarque'],rows.slice().reverse().map(r=>[date(r[0]),number.format(r[2])+' '+r[4],r[3]==='1'?'Quantifié':'Limite · code '+r[3]])));
   } else {
     const row=item.latest,month=$('#droughtMonth').value;
-    fields.push(['Cours d’eau',item.river],['Date de l’observation',date(row[0])],['État observé',row[2]],['Source','ONDE / OFB via Hub’Eau'],['Extraction',data.extracted]);
-    holder.append(featureList(fields),observationTable(['Date','État observé'],item.rows.filter(r=>r[0].startsWith(month)).slice().reverse().map(r=>[date(r[0]),r[2]])));
+    fields=[['État observé',row[2]],['Date de l’observation',date(row[0])],['Cours d’eau',item.river],
+      ['Commune',item.commune],['Identifiant',item.id],['Source','ONDE / OFB via Hub’Eau'],['Extraction',data.extracted]];
+    note='Il s’agit de la dernière observation disponible pour cette station dans le mois choisi.';
+    summary='Historique des observations';
+    supplementary.push(observationTable(['Date','État observé'],item.rows.filter(r=>r[0].startsWith(month)).slice().reverse().map(r=>[date(r[0]),r[2]])));
   }
-  holder.append(makeButton('Localiser ce site','text-button',()=>focusPoint(item.point,8)));
-  holder.append(textLink('Consulter la source et sa méthode',type==='withdrawals'?'https://www.data.gouv.fr/dataservices/hubeau-prelevements-en-eau':
+  appendFeatureFacts(holder,fields,supplementary,note,summary);
+  const actions=node('div',null,'feature-actions');
+  actions.append(makeButton('Localiser ce site','text-button',()=>focusPoint(item.point,8)),
+    textLink('Consulter la source et sa méthode',type==='withdrawals'?'https://www.data.gouv.fr/dataservices/hubeau-prelevements-en-eau':
     type==='quality'?'https://www.data.gouv.fr/dataservices/hubeau-qualite-des-cours-deau':'https://www.data.gouv.fr/dataservices/hubeau-ecoulement-des-cours-deau'));
-  holder.hidden=false;
+  holder.append(actions);holder.hidden=false;revealFeatureDetail();
 }
 
 function observationPeriodLabel(key) {

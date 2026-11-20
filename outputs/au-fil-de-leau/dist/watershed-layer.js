@@ -86,8 +86,10 @@ async function showWatershed(point) {
   const run = ++watershedRun;
   const holder = $('#featureDetail');
   holder.dataset.kind = 'watershed';
-  holder.replaceChildren(node('p','Recherche du sous-bassin autour de ce point…','note'));
+  featureHeader(holder,'watershed','Recherche du sous-bassin…');
+  holder.append(node('p','Recherche autour du point choisi.','note'));
   holder.hidden = false;
+  revealFeatureDetail();
   try {
     const data = await loadWatershedLevel('detail').catch(() => loadWatershedLevel('overview'));
     if (run !== watershedRun) return;
@@ -97,11 +99,17 @@ async function showWatershed(point) {
     localWatershed = candidates.sort((a,b) => area(a)-area(b))[0] || null;
     locatedPoint = localWatershed ? point : null;
     if (localWatershed) showFeature({type:'watershed',item:localWatershed});
-    else holder.replaceChildren(node('p','Aucun sous-bassin du référentiel à cet endroit.','note'));
+    else {
+      featureHeader(holder,'watershed','Aucun sous-bassin trouvé');
+      holder.append(node('p','Le référentiel ne contient pas de sous-bassin à cet endroit.','note'));
+      revealFeatureDetail();
+    }
     invalidate();
   } catch {
     if (run !== watershedRun) return;
-    holder.replaceChildren(node('p','Les données des sous-bassins sont indisponibles.','note'),
+    featureHeader(holder,'watershed','Données indisponibles');
+    holder.append(node('p','Les données des sous-bassins sont indisponibles.','note'),
       makeButton('Réessayer','text-button',()=>showWatershed(point)));
+    revealFeatureDetail();
   }
 }

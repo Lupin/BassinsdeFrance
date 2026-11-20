@@ -140,8 +140,10 @@ function clearContext() {
   highlightedCrossing=null; highlightedArea=null; locatedPoint=null;
   watershedRun++;
   localWatershed=null;
-  $('#featureDetail').hidden=true;
-  $('#featureDetail').replaceChildren();
+  const feature=$('#featureDetail'),returnFocus=feature.contains(document.activeElement);
+  feature.hidden=true;
+  feature.replaceChildren();
+  if (returnFocus) $('#map').focus({preventScroll:true});
 }
 function clearSelection() {
   selected=null;currentTerritory=null;
@@ -159,12 +161,22 @@ function chooseRiver(river,{focus=false,scope=false}={}) {
   }).catch(()=>{});
 
 }
-function selectTerritory(item,type,{focus=false}={}) {
+function selectTerritory(item,type,{focus=false,reveal=false}={}) {
   currentTerritory={item,type}; basin=null; selected=null;clearContext();clearSearch();
   setMapTitle();basinButtons();
   if (focus) frameBounds(item.box);
   $('#'+(type==='region'?'regions':'departments')).checked=true;
   renderDetail();invalidate();
+  if (reveal) {
+    const heading=$('#detail h2');
+    if (heading) {
+      heading.tabIndex=-1;
+      if (window.matchMedia('(min-width: 761px)').matches) {
+        $('#details').scrollTop=0;
+        heading.focus({preventScroll:true});
+      } else heading.focus();
+    }
+  }
 }
 function focusPoint(point, magnification=5) {
   locatedPoint=point;
@@ -463,7 +475,7 @@ function openSearchResult(result) {
   if (result.type==='river') chooseRiver(result.item,{focus:true,scope:true});
   else if (observationLayers[result.type]) {
     clearSearch();focusPoint(result.item.point,8);showObservationFeature(result.type,result.item);
-  } else selectTerritory(result.item,result.type,{focus:true});
+  } else selectTerritory(result.item,result.type,{focus:true,reveal:true});
 }
 function searchKey(event) {
   if (event.key==='Escape') {clearSearch();return;}
@@ -518,13 +530,15 @@ function openHit(hit) {
   if (type==='river') chooseRiver(item);
   else if (type==='department' || type==='region') {
     if (selected) showFeature(hit);
-    else selectTerritory(item,type);
+    else selectTerritory(item,type,{reveal:true});
   } else if (type==='cluster') {
     const container=$('#featureDetail');
-    container.replaceChildren(node('h3',item.items.length+' ouvrages à cet endroit'));
+    container.dataset.kind='cluster';
+    featureHeader(container,'dam',item.items.length+' ouvrages à cet endroit');
     const list=node('div',null,'compact-list');
     for (const entry of item.items) list.append(makeButton(entry.n,'item-button',()=>showFeature({type:'dam',item:entry})));
-    container.append(list);container.hidden=false;
+    container.append(node('p','Choisissez un ouvrage pour afficher son détail.','note'),list);
+    container.hidden=false;revealFeatureDetail();
   } else showFeature(hit);
 }
 function featureList(fields) {
@@ -535,23 +549,56 @@ function featureList(fields) {
   }
   return list;
 }
+function featureLayerLabel(type) {
+  const labels={withdrawals:'Prélèvements par usage',quality:'Qualité des rivières',drought:'Écoulements et assecs',
+    captage:'Captages d’eau potable',farm:'Élevages recensés (ICPE)',industry:'Sites industriels et Seveso',
+    flow:'Stations et débits',dam:'Ouvrages hydroélectriques',nuclear:'Centrales nucléaires',
+    protected:'Zones protégées',aquifer:'Nappes captives',watershed:'Sous-bassins topographiques',
+    department:'Limites départementales',region:'Limites régionales'};
+  return labels[type] || waterTransportLayers[type]?.label || observationLayers[type]?.label || 'Donnée cartographique';
+}
+function closeFeatureDetail() {
+  const container=$('#featureDetail');
+  container.hidden=true;highlightedArea=null;invalidate();
+  $('#map').focus({preventScroll:true});
+}
+function revealFeatureDetail() {
+  const container=$('#featureDetail');
+  if (container.hidden) return;
+  if (window.matchMedia('(min-width: 761px)').matches) $('#details').scrollTop=0;
+  container.querySelector('h3')?.focus({preventScroll:true});
+}
+function featureHeader(container,type,title) {
+  const heading=node('h3',title);heading.tabIndex=-1;
+  const close=makeButton('×','close-button',closeFeatureDetail);
+  close.setAttribute('aria-label','Fermer cette fiche et revenir à la carte');
+  container.replaceChildren(node('p',featureLayerLabel(type),'feature-layer-label'),heading,close);
+}
+function appendFeatureFacts(container,fields,supplementary=[],note='',summary='Informations complémentaires') {
+  const main=fields.slice(0,3),extra=fields.slice(3);
+  if (main.length) container.append(featureList(main));
+  if (note) container.append(node('p',note,'note'));
+  if (extra.length||supplementary.length) {
+    const details=node('details',null,'feature-more');
+    details.append(node('summary',summary));
+    if (extra.length) details.append(featureList(extra));
+    details.append(...supplementary);
+    container.append(details);
+  }
+}
 function showFeature({type,item}) {
   if (['withdrawals','quality','drought'].includes(type)) { showObservationFeature(type,item); return; }
   const container=$('#featureDetail');
   container.dataset.kind=type;
-  const title=node('h3',type==='department'||type==='region'?item.name:item.n);
-  const close=makeButton('×','close-button',()=>{
-    container.hidden=true;highlightedArea=null;invalidate();
-  });
-  close.setAttribute('aria-label','Fermer cette fiche');
-  container.replaceChildren(title,close);
+  featureHeader(container,type,type==='department'||type==='region'?item.name:item.n);
   let fields=[],note='';
+  const supplementary=[],actions=[];
   if (type==='lakes') {
     fields=[['Surface',number.format(item.hectares)+' ha'],['Source','BD TOPAGE® 2026']];
   } else if (type==='industry') {
     const classification = ['', 'Seveso seuil bas', 'Seveso seuil haut'][item.seuil];
-    fields=[['Commune',item.commune],['Régime déclaré par la source',item.regime],
-      ['Classement',classification],['Identifiant AIOT',item.id],['Source','Géorisques']];
+    fields=[['Classement',classification||'Non précisé'],['Commune',item.commune],['Identifiant AIOT',item.id],
+      ['Régime déclaré par la source',item.regime],['Source','Géorisques']];
     note='Le classement décrit l’installation. Il ne délimite pas une zone d’exposition.';
   } else if (type==='wastewater') {
     fields=[['Identifiant Sandre',item.id],
@@ -576,8 +623,8 @@ function showFeature({type,item}) {
     fields=[['Type','Obstacle à usage hydroélectrique'],['Cours d’eau',item.river],['Commune',item.commune],
       ['Identifiant ROE',item.id],['Hauteur de chute',item.height?item.height+' m':'Non renseignée']];
   } else if (type==='nuclear') {
-    fields=[['Source','Registre EDF'],['Commune',item.commune],['Réacteurs recensés',item.reactors],
-      ['Puissance installée',number.format(item.mw)+' MW']];
+    fields=[['Commune',item.commune],['Réacteurs recensés',item.reactors],
+      ['Puissance installée',number.format(item.mw)+' MW'],['Source','Registre EDF']];
   } else if (type==='protected') {
     fields=[['Catégorie',item.label],['Identifiant INPN',item.id]];
   } else if (type==='aquifer') {
@@ -590,19 +637,20 @@ function showFeature({type,item}) {
     note='Périmètre qui contient le point choisi.';
   }
   if (item.link) fields.push(['Association au réseau',associationLabel(item)]);
-  container.append(featureList(fields));
-  if (note) container.append(node('p',note,'note'));
-  if (item.url && /^https:\/\//.test(item.url)) container.append(textLink('Voir la fiche INPN',item.url));
-  if (type==='watershed') container.append(makeButton('Cadrer le bassin versant','text-button',()=>frameBounds(item.box)));
-  if (type==='industry') container.append(textLink('Voir la fiche Géorisques','https://www.georisques.gouv.fr/risques/installations/donnees/details/'+encodeURIComponent(item.id)));
-  if (type==='farm') container.append(textLink('Voir la fiche Géorisques','https://www.georisques.gouv.fr/risques/installations/donnees/details/'+encodeURIComponent(item.id)));
-  if (type==='flow' && item.station) container.append(textLink('Voir la station sur HydroPortail','https://www.hydro.eaufrance.fr/stationhydro/'+encodeURIComponent(item.station||item.site)+'/fiche'));
-  if (type==='department'||type==='region') container.append(makeButton('Voir les bassins en commun','text-button',()=>selectTerritory(item,type,{focus:true})));
+  if (item.url && /^https:\/\//.test(item.url)) supplementary.push(textLink('Voir la fiche INPN',item.url));
+  if (type==='industry'||type==='farm') supplementary.push(textLink('Voir la fiche Géorisques','https://www.georisques.gouv.fr/risques/installations/donnees/details/'+encodeURIComponent(item.id)));
+  if (type==='flow' && item.station) supplementary.push(textLink('Voir la station sur HydroPortail','https://www.hydro.eaufrance.fr/stationhydro/'+encodeURIComponent(item.station||item.site)+'/fiche'));
+  if (item.point) actions.push(makeButton('Localiser cet élément','text-button',()=>focusPoint(item.point,8)));
+  if (type==='watershed') actions.push(makeButton('Cadrer le bassin versant','text-button',()=>frameBounds(item.box)));
+  if (type==='department'||type==='region') actions.push(makeButton('Voir les bassins en commun','text-button',()=>selectTerritory(item,type,{focus:true,reveal:true})));
   if (item.link && selected?.id!==item.link[0]) {
     const river=riverById.get(item.link[0]);
-    if (river) container.append(makeButton('Explorer '+displayName(river.n),'text-button',()=>chooseRiver(river,{focus:true})));
+    if (river) actions.push(makeButton('Explorer '+displayName(river.n),'text-button',()=>chooseRiver(river,{focus:true})));
   }
+  appendFeatureFacts(container,fields,supplementary,note);
+  if (actions.length) {const row=node('div',null,'feature-actions');row.append(...actions);container.append(row);}
   container.hidden=false;
+  revealFeatureDetail();
 }
 
 function updateLegend() {
