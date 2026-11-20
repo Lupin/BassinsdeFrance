@@ -373,3 +373,34 @@ dialog p { margin: .4rem 0; font-size: .88rem; }
 .startup-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; margin-top: .35rem; }
 .startup-actions a { display: inline-flex; align-items: center; min-height: 44px; }
 #mapStartupDiagnostic { overflow-wrap: anywhere; font-size: .8rem; }
+
+/* Fullscreen keeps map navigation and animation controls available. */
+.map-section:fullscreen {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background: var(--paper);
+  overflow: auto;
+}
+.map-section:-webkit-full-screen {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background: var(--paper);
+  overflow: auto;
+}
+.map-section.map-expanded {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  overflow: auto;
+}
+.map-section:fullscreen #mapbox { flex: 1 1 0; height: auto; min-height: 180px; }
+.map-section:-webkit-full-screen #mapbox { flex: 1 1 0; height: auto; min-height: 180px; }
+.map-section.map-expanded #mapbox { flex: 1 1 0; height: auto; min-height: 180px; }
+body.map-expanded-open { overflow: hidden; }

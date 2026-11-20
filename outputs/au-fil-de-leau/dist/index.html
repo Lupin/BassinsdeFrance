@@ -173,9 +173,11 @@
         <h2 id="viewtitle">Tous les bassins</h2>
         <div class="map-toolbar-actions">
           <span id="visibleCount">Chargement du réseau…</span>
+          <button type="button" id="mapFullscreen" class="export-button" aria-pressed="false" aria-controls="mapbox">Plein écran</button>
           <button type="button" id="exportOpen" class="export-button" aria-haspopup="dialog" aria-controls="mapExport">Enregistrer ou exporter</button>
         </div>
       </div>
+      <p id="fullscreenStatus" class="export-restored" role="status"></p>
       <p id="mapExportRestored" class="export-restored" role="status"></p>
       <div id="mapStartup" class="map-startup" role="status">
         <p id="mapStartupMessage">Chargement de la carte…</p>
@@ -369,6 +371,7 @@
   <script id="watersheds-detail-data-lazy" data-src="watersheds-detail-data.js"></script>
   <script src="watershed-layer.js" defer></script>
   <script src="app.js" defer></script>
+  <script src="fullscreen.js" defer></script>
   <script src="export-graphics.js" defer></script>
   <script src="map-export.js" defer></script>
 </body>
