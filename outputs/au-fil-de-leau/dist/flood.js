@@ -6,7 +6,7 @@ const floodPreviews = new Map();
 const floodTargetResolution = 125;
 const floodMaxSide = 2800;
 const floodPixelBudget = 5_000_000;
-let floodTimer, floodFrame, floodKey, floodRequest;
+let floodTimer, floodFrame, floodKey, floodRequest, displayedFlood;
 
 function cancelFloodDetail() {
   clearTimeout(floodTimer);
@@ -80,6 +80,7 @@ function floodRequestSize(spanX, spanY) {
 }
 
 function drawFlood(c) {
+  displayedFlood = null;
   if (!$('#floodLayer').checked) return;
   const status = $('#floodStatus');
   const layer = $('#floodType').value;
@@ -90,7 +91,7 @@ function drawFlood(c) {
   $('#floodFocus').hidden = ratio <= 1;
   if (ratio > 1) {
     if (floodKey) cancelFloodDetail();
-    paintFlood(c, preview);
+    paintFlood(c, displayedFlood = preview);
     status.textContent = preview.image ? 'Vue d’ensemble · détail disponible à l’échelle d’une vallée.'
       : preview.failed ? 'Aperçu indisponible.' : 'Chargement des enveloppes…';
     return;
@@ -105,11 +106,11 @@ function drawFlood(c) {
   });
   const key = params.toString();
   if (floodFrame?.key === key) {
-    paintFlood(c, floodFrame.image ? floodFrame : preview);
+    paintFlood(c, displayedFlood = floodFrame.image ? floodFrame : preview);
     status.textContent = floodFrame.message;
     return;
   }
-  paintFlood(c,preview);
+  paintFlood(c, displayedFlood = preview);
   if (key === floodKey) return;
   cancelFloodDetail();
   floodKey = key;

@@ -25,7 +25,22 @@ for (const item of window.ADMIN.departments) {
 const names=new Map();D.rivers.forEach((r,i)=>{r.i=i;r.key=normalize(r.n);if(!names.has(r.key))names.set(r.key,r);r.box=[Infinity,Infinity,-Infinity,-Infinity];for(const line of r.p)for(const p of line){r.box[0]=Math.min(r.box[0],p[0]);r.box[1]=Math.min(r.box[1],p[1]);r.box[2]=Math.max(r.box[2],p[0]);r.box[3]=Math.max(r.box[3],p[1])}});
 const overrides={maine:'04C0000002000855547'};for(const [key,id] of Object.entries(overrides)){let r=D.rivers.find(r=>r.id===id);if(r)names.set(key,r)}
 for(const [key,ids,label] of [['somme',['01C0000002000824194','01C0000002000818638'],'la Somme'],['escaut',['01C0000002000815351','01C0000002000822354'],"l’Escaut"]]){let parts=ids.map(id=>D.rivers.find(r=>r.id===id)).filter(Boolean);if(parts.length){let r=parts[0];r.p=parts.flatMap(x=>x.p);r.n=label;r.key=key;names.set(key,r)}}
-function polyPath(polys){let p=new Path2D();for(const poly of polys)for(const ring of poly){ring.forEach((v,i)=>i?p.lineTo(...v):p.moveTo(...v));p.closePath()}return p}
+const mapPathGeometry = new WeakMap();
+function polyPath(polys) {
+  const path = new Path2D();
+  for (const poly of polys) for (const ring of poly) {
+    ring.forEach((point, index) => index ? path.lineTo(...point) : path.moveTo(...point));
+    path.closePath();
+  }
+  mapPathGeometry.set(path, {polys});
+  return path;
+}
+function combineMapPaths(context, paths) {
+  if (context.combinePaths) return context.combinePaths(paths);
+  const combined = new Path2D();
+  for (const path of paths) combined.addPath(path);
+  return combined;
+}
 D.basins.forEach(b=>b.path=polyPath(b.polys));const landPath=polyPath(D.land);const departments=window.ADMIN.departments;
 const specs={
 'loire':['Mont Gerbier-de-Jonc',null,'Océan Atlantique',[-2.2,47.26]],
@@ -132,7 +147,7 @@ function invalidate() {
 function resize() {
   const rect = $('#mapbox').getBoundingClientRect();
   if (!rect.width || !rect.height || (w === rect.width && h === rect.height)) return;
-  const center = w && h && zoom !== 1 ? world(w/2,h/2) : null;
+  const center = w && h && (zoom !== 1 || tx || ty) ? world(w/2,h/2) : null;
   w = rect.width; h = rect.height;
   dpr = Math.min(devicePixelRatio || 1, 1.5);
   canvas.width = flowCanvas.width = base.width = labelsLayer.width = Math.round(w*dpr);
@@ -145,7 +160,9 @@ function resize() {
   else { tx = 0; ty = 0; }
   invalidate();
 }
-function transform(c) { c.setTransform(dpr*scale*zoom,0,0,dpr*scale*zoom,dpr*(ox+tx),dpr*(oy+ty)); }
+function transform(c, ratio=dpr) {
+  c.setTransform(ratio*scale*zoom,0,0,ratio*scale*zoom,ratio*(ox+tx),ratio*(oy+ty));
+}
 function world(x,y) { return [(x-ox-tx)/(scale*zoom),(y-oy-ty)/(scale*zoom)]; }
 function screenPoint([x,y]) { return [ox+tx+x*scale*zoom,oy+ty+y*scale*zoom]; }
 function viewBox(margin = 0) { return [...world(-margin,-margin), ...world(w+margin,h+margin)]; }
@@ -176,12 +193,13 @@ function zoomAt(factor,x=w/2,y=h/2) {
 function resetMap() { zoom = 1; tx = ty = 0; invalidate(); }
 function setText(element, value) { if (element.textContent !== value) element.textContent = value; }
 
-function drawTiles(c, style, box) {
+function drawTiles(c, style, box, exporting=false) {
   const a = unproject(box.slice(0,2)), b = unproject(box.slice(2));
   const z = Math.max(2, Math.min(17, Math.round(Math.log2(scale*zoom*72*360/256))));
   const n = 2**z;
   const tileX = lon => Math.floor((lon+180)/360*n);
   const tileY = lat => Math.floor((180-mercatorDegrees(lat))/360*n);
+  let ready = true;
   c.save();
   c.globalAlpha = style==='osm' ? .82 : style==='osm-muted' ? .48 : .75;
   c.filter = style==='osm-muted' ? 'grayscale(1)' : 'none';
@@ -190,17 +208,29 @@ function drawTiles(c, style, box) {
       const tile = z+'/'+x+'/'+y;
       const key = (style==='ign'?'ign':'osm')+'/'+tile;
       if (!tileCache.has(key)) {
-        const image = new Image();
-        image.referrerPolicy = 'strict-origin-when-cross-origin';
-        tileCache.set(key,image);
-        image.onload = () => { if ($('#basemap').value === style) invalidate(); };
-        image.onerror = () => { if (tileCache.has(key)) tileCache.set(key,null); };
-        image.src = style==='ign'
+        const url = style==='ign'
           ? 'https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&STYLE=normal&FORMAT=image/png&TILEMATRIXSET=PM&TILEMATRIX='+z+'&TILEROW='+y+'&TILECOL='+x
           : 'https://tile.openstreetmap.org/'+tile+'.png';
+        const loadTile = cors => {
+          const image = new Image();
+          if (cors) image.crossOrigin = 'anonymous';
+          image.referrerPolicy = 'strict-origin-when-cross-origin';
+          tileCache.set(key,image);
+          image.onload = () => { if ($('#basemap').value !== 'none') invalidate(); };
+          image.onerror = () => {
+            if (tileCache.get(key) !== image) return;
+            if (cors) loadTile(false);
+            else tileCache.set(key,null);
+          };
+          image.src = url;
+        };
+        loadTile(true);
       }
       const image = tileCache.get(key);
-      if (!image?.naturalWidth) continue;
+      if (!image?.naturalWidth || (exporting && image.crossOrigin !== 'anonymous')) {
+        ready = false;
+        continue;
+      }
       const tileSize = 72*360/n;
       const left = (x/n*360-180+5.4)*72;
       const top = 494-(180-y/n*360-centerMercator)*72;
@@ -209,11 +239,13 @@ function drawTiles(c, style, box) {
   }
   while (tileCache.size>96) tileCache.delete(tileCache.keys().next().value);
   c.restore();
+  return ready;
 }
 
 function linePath(line) {
   const path = new Path2D();
   line.forEach((point,index) => index ? path.lineTo(...point) : path.moveTo(...point));
+  mapPathGeometry.set(path, {line});
   return path;
 }
 function drawRiver(c,river) {
@@ -252,73 +284,10 @@ function drawStatic() {
   const s = scale*zoom, box = viewBox(12);
   if (style === 'positron') syncPositron();
   else if (style !== 'none') drawTiles(bc,style,box);
-  bc.strokeStyle='#a9b6bd'; bc.lineWidth=.8/s; bc.stroke(landPath);
-
-  if ($('#areas').checked) for (const b of D.basins) {
-    if (basin && basin!==b.id) continue;
-    bc.fillStyle=colors[b.id]+'13'; bc.fill(b.path,'evenodd');
-  }
-  drawFlood(bc);
-  if (EX) for (const [type,id] of Object.entries(areaLayers)) {
-    if (!$('#'+id).checked) continue;
-    const entries = type==='aquifer' ? EX.aquifers : EX.protected;
-    for (const item of entries) {
-      if (type==='protected' && !protectedInFilter(item)) continue;
-      if (!overlaps(item.box,box)) continue;
-      const aqua = type==='aquifer';
-      drawArea(bc,item,aqua?'#287bbc29':'#25764630',aqua?'#287bbc9c':'#217144a6',s);
-    }
-  }
-  drawWatershedLimits(bc,box,s);
-  if (localWatershed) drawArea(bc,localWatershed,'#284d9c35','#244eaa',s,2.3);
-  if (highlightedCrossing) drawArea(bc,highlightedCrossing,colors[highlightedCrossing.basin]+'48',colors[highlightedCrossing.basin],s);
-
-  visible = visibleRivers(box);
-  for (const river of visible) {
-    if (river===selected) continue;
-    const isRelevant = !basin || river.b===basin;
-    bc.globalAlpha = isRelevant ? (river.l>100?.99:river.l>35?.74:.44) : .10;
-    bc.strokeStyle = colors[river.b];
-    bc.lineWidth = (river.l>350?1.8:river.l>100?1.22:river.l>35?.80:.46)/Math.pow(s,.91);
-    drawRiver(bc,river);
-  }
-  bc.globalAlpha=1;
-  drawWaterTransport(bc,box,s);
-  if (selected) {
-    const route = currentRoute(selected);
-    if (route?.full?.length) {
-      route.path ||= linePath(route.full);
-      bc.strokeStyle='#ffffffdf'; bc.lineWidth=4.8/s; bc.stroke(route.path);
-      bc.strokeStyle=colors[selected.b]; bc.lineWidth=2.75/s; bc.stroke(route.path);
-    } else {
-      bc.strokeStyle=colors[selected.b]; bc.lineWidth=2.6/s; drawRiver(bc,selected);
-    }
-    if (highlightedArea) {
-      bc.save();
-      highlightedArea.item.path ||= polyPath(highlightedArea.item.polys);
-      bc.clip(highlightedArea.item.path,'evenodd');
-      bc.strokeStyle=highlightedArea.type==='protected'?'#174f2f':'#185d95';
-      bc.lineWidth=4/s;
-      if (route?.path) bc.stroke(route.path); else drawRiver(bc,selected);
-      bc.restore();
-    }
-  }
-
+  visible = drawMapGeometry(bc,box,s,drawFlood);
   lc.setTransform(1,0,0,1,0,0);
   lc.clearRect(0,0,labelsLayer.width,labelsLayer.height);
-  transform(lc);
-  if ($('#basinBoundaries').checked) for (const b of D.basins) {
-    if (overlaps(b.box,box)) outline(lc,b,colors[b.id]+(basin&&b.id!==basin?'45':'cb'),1.15/s);
-  }
-  if ($('#departments').checked) for (const item of departments) {
-    if (overlaps(item.box,box)) outline(lc,item,'#17191d',.8/s);
-  }
-  if ($('#regions').checked && geography) for (const item of geography.regions) {
-    if (overlaps(item.box,box)) outline(lc,item,'#3b4654',1.65/s,[5/s,3/s]);
-  }
-  drawWaterTransport(lc,box,s,true);
-  drawLabels(lc);
-  drawPoints(lc);
+  drawMapAnnotations(lc,box,s,visible,style);
 
   ctx.setTransform(1,0,0,1,0,0);
   ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -332,6 +301,79 @@ function drawStatic() {
   dirty=false; flowDirty=true;
 }
 
+function drawMapGeometry(c, box, s, paintMapFlood) {
+  c.strokeStyle='#a9b6bd'; c.lineWidth=.8/s; c.stroke(landPath);
+
+  if ($('#areas').checked) for (const b of D.basins) {
+    if (basin && basin!==b.id) continue;
+    c.fillStyle=colors[b.id]+'13'; c.fill(b.path,'evenodd');
+  }
+  paintMapFlood(c);
+  if (EX) for (const [type,id] of Object.entries(areaLayers)) {
+    if (!$('#'+id).checked) continue;
+    const entries = type==='aquifer' ? EX.aquifers : EX.protected;
+    for (const item of entries) {
+      if (type==='protected' && !protectedInFilter(item)) continue;
+      if (!overlaps(item.box,box)) continue;
+      const aqua = type==='aquifer';
+      drawArea(c,item,aqua?'#287bbc29':'#25764630',aqua?'#287bbc9c':'#217144a6',s);
+    }
+  }
+  drawWatershedLimits(c,box,s);
+  if (localWatershed) drawArea(c,localWatershed,'#284d9c35','#244eaa',s,2.3);
+  if (highlightedCrossing) drawArea(c,highlightedCrossing,colors[highlightedCrossing.basin]+'48',colors[highlightedCrossing.basin],s);
+
+  const rivers = visibleRivers(box);
+  for (const river of rivers) {
+    if (river===selected) continue;
+    const isRelevant = !basin || river.b===basin;
+    c.globalAlpha = isRelevant ? (river.l>100?.99:river.l>35?.74:.44) : .10;
+    c.strokeStyle = colors[river.b];
+    c.lineWidth = (river.l>350?1.8:river.l>100?1.22:river.l>35?.80:.46)/Math.pow(s,.91);
+    drawRiver(c,river);
+  }
+  c.globalAlpha=1;
+  drawWaterTransport(c,box,s);
+  if (selected) {
+    const route = currentRoute(selected);
+    if (route?.full?.length) {
+      route.path ||= linePath(route.full);
+      c.strokeStyle='#ffffffdf'; c.lineWidth=4.8/s; c.stroke(route.path);
+      c.strokeStyle=colors[selected.b]; c.lineWidth=2.75/s; c.stroke(route.path);
+    } else {
+      c.strokeStyle=colors[selected.b]; c.lineWidth=2.6/s; drawRiver(c,selected);
+    }
+    if (highlightedArea) {
+      c.save();
+      highlightedArea.item.path ||= polyPath(highlightedArea.item.polys);
+      c.clip(highlightedArea.item.path,'evenodd');
+      c.strokeStyle=highlightedArea.type==='protected'?'#174f2f':'#185d95';
+      c.lineWidth=4/s;
+      if (route?.path) c.stroke(route.path); else drawRiver(c,selected);
+      c.restore();
+    }
+  }
+
+  return rivers;
+}
+
+function drawMapAnnotations(c, box, s, rivers, style, ratio=dpr) {
+  transform(c,ratio);
+  if ($('#basinBoundaries').checked) for (const b of D.basins) {
+    if (overlaps(b.box,box)) outline(c,b,colors[b.id]+(basin&&b.id!==basin?'45':'cb'),1.15/s);
+  }
+  if ($('#departments').checked) for (const item of departments) {
+    if (overlaps(item.box,box)) outline(c,item,'#17191d',.8/s);
+  }
+  if ($('#regions').checked && geography) for (const item of geography.regions) {
+    if (overlaps(item.box,box)) outline(c,item,'#3b4654',1.65/s,[5/s,3/s]);
+  }
+  drawWaterTransport(c,box,s,true);
+  drawLabels(c,rivers,style,ratio);
+  drawPoints(c,ratio);
+
+}
+
 function updateScale() {
   const [,lat] = unproject(world(w/2,h/2));
   const kmPerPixel = 111.32*Math.cos(lat*Math.PI/180)/(72*scale*zoom);
@@ -342,8 +384,8 @@ function updateScale() {
   el.style.width = km/kmPerPixel+'px';
   setText(el,km<1 ? number.format(km*1000)+' m' : number.format(km)+' km');
 }
-function drawLabels(c) {
-  c.setTransform(dpr,0,0,dpr,0,0);
+function drawLabels(c,rivers,style,ratio) {
+  c.setTransform(ratio,0,0,ratio,0,0);
   const placed = [];
   function label(text,point,color,size,mark=false) {
     const [x,y]=screenPoint(point);
@@ -366,14 +408,14 @@ function drawLabels(c) {
     const major = new Set(cityLabels.map(x=>x[0]));
     const ordered = [...departments].sort((a,b)=>Number(major.has(b.chief))-Number(major.has(a.chief)));
     for (const d of ordered) {
-      if ((zoom<1.8 && !major.has(d.chief)) || ($('#basemap').value==='positron' && zoom<2.75)) {
+      if ((zoom<1.8 && !major.has(d.chief)) || (style==='positron' && zoom<2.75)) {
         const [x,y]=screenPoint(d.point);
         c.beginPath(); c.arc(x,y,1.6,0,Math.PI*2); c.fillStyle='#536170'; c.fill();
       } else label(d.chief,d.point,'#354252',11,true);
     }
   }
   if ($('#cities').checked) {
-    const candidates = [...visible].reverse().filter(r => {
+    const candidates = [...rivers].reverse().filter(r => {
       if (basin && r.b!==basin) return false;
       if (zoom<1.45) return overviewNames.has(r.key) && names.get(r.key)===r;
       return r.l>150/Math.max(1,zoom*.65);
@@ -387,7 +429,7 @@ function drawLabels(c) {
       if (p && label(displayName(r.n),p,colors[r.b],r===selected?13:11)) used.add(r.n);
     }
   }
-  if ($('#basemap').value==='none' && zoom<2.1) {
+  if (style==='none' && zoom<2.1) {
     for (const [name,lon,lat] of [['La Manche',-3.1,49.55],['Océan Atlantique',-4.5,45.4],['Méditerranée',5.7,42.15]]) {
       label(name,project(lon,lat),'#637c8a',11);
     }
@@ -408,9 +450,9 @@ function flowInFilter(item,box) {
   const [min,max]=value.split(':').slice(1).map(Number);
   return item.q>=min && item.q<max;
 }
-function drawPoints(c) {
+function drawPoints(c,ratio=dpr) {
   const box=viewBox(10);
-  c.setTransform(dpr,0,0,dpr,0,0);
+  c.setTransform(ratio,0,0,ratio,0,0);
   plotted=[]; clusters=[]; flowPoints=[];
   function marker(type,item,color,radius,shape='circle') {
     const [x,y]=screenPoint(item.p);

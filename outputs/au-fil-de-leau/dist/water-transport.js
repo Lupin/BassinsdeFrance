@@ -109,11 +109,7 @@ function drawWaterTransport(c, box, s, points = false) {
     }
     const routes = visibleWaterItems('navigation', box);
     if (!routes.length) return;
-    const network = new Path2D();
-    for (const item of routes) {
-      item.path ||= linePath(item.line);
-      network.addPath(item.path);
-    }
+    const network = combineMapPaths(c, routes.map(item => item.path ||= linePath(item.line)));
     c.save();
     c.lineJoin = 'round';
     c.lineCap = 'round';

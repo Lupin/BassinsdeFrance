@@ -10,6 +10,12 @@ Atlas animé des cours d’eau et des sept grands bassins de gestion de France m
 
 Les données de la BD TOPAGE® et les limites administratives sont stockées avec le projet. Les surcouches thématiques et les intersections sont chargées à la demande. Les parcours fondés sur des nœuds officiels couvrent un secteur pilote de la haute Loire. Ailleurs, l’animation indique un sens reconstitué.
 
+## Enregistrer ou exporter une vue
+
+Dans la barre de la carte, **Enregistrer ou exporter** ouvre l’aperçu. **Enregistrer la vue** garde le cadrage et les réglages dans le navigateur actuel. **Exporter un fichier** propose le PNG en deux définitions, le PDF en A4 et le SVG vectoriel. L’animation est figée dans les fichiers. La description modifiable accompagne le PDF et le SVG. Elle peut être copiée pour le partage d’un PNG.
+
+Le PNG et le PDF peuvent inclure le fond actuel si ses tuiles peuvent être lues par le navigateur. Le SVG utilise le fond blanc et les couches vectorielles. Les enveloppes d’inondation, affichées à partir d’images, restent disponibles en PNG et PDF. Les crédits des sources figurent dans chaque fichier.
+
 ## Licence du code
 
 Le code et la documentation originaux de ce dépôt sont publiés sous licence **MIT**. Consulte le fichier [`LICENSE`](LICENSE) pour le texte complet et [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md) pour les ressources tierces.

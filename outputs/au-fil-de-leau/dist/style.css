@@ -242,3 +242,127 @@ dialog p { margin: .4rem 0; font-size: .88rem; }
   .animation-bar > label { gap: .2rem; }
   .animation-bar .text-button,.animation-bar .solid-button { font-size: .73rem; padding-inline: .33rem; }
 }
+
+/* Enregistrement et export de la vue */
+.map-toolbar { flex-wrap: wrap; }
+.map-toolbar-actions, .export-modes {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .55rem;
+}
+.map-toolbar-actions { justify-content: flex-end; max-width: 100%; }
+.export-button {
+  min-height: 44px;
+  padding: .45rem .7rem;
+  border: 1px solid #7d919e;
+  border-radius: 5px;
+  color: var(--blue);
+  font-weight: 650;
+  font-size: .875rem;
+  text-align: start;
+}
+.export-button:disabled { color: var(--muted); background: var(--fog); cursor: default; }
+.export-button[aria-pressed=true], .export-primary:not(:disabled) {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #fff;
+}
+.export-primary:not(:disabled):hover { background: #123c58; }
+#mapExport {
+  width: min(960px, calc(100% - 1.5rem));
+  max-width: none;
+  max-height: calc(100dvh - 1.5rem);
+  border: 1px solid #7d919e;
+  border-radius: 9px;
+  padding: clamp(.95rem, 3vw, 1.7rem);
+  scroll-padding: .5rem;
+  color: var(--ink);
+  background: var(--paper);
+}
+#mapExport::backdrop { background: #142b40a1; }
+#mapExport :focus-visible, #exportOpen:focus-visible { outline: 3px solid #176ba5; outline-offset: 2px; }
+#mapExport .note { margin: 0; }
+#mapExport h2 { font-size: clamp(1.18rem, 3vw, 1.6rem); line-height: 1.2; }
+#mapExport h3 { font-size: .96rem; }
+.export-header, .export-preview header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: .45rem;
+}
+.export-header { margin-bottom: .85rem; }
+.export-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(255px, 1fr);
+  gap: 1.15rem;
+  margin-top: .9rem;
+}
+.export-preview { min-width: 0; }
+#exportDimensions { font-size: .8rem; color: var(--muted); }
+#exportSheet { margin: .45rem 0 0; border: 1px solid #b9c9d3; border-radius: 5px; overflow: hidden; }
+#exportSheet[data-paper] { box-shadow: inset 0 0 0 .55rem #eef3f5; padding: .55rem; }
+#exportPreview { display: block; width: 100%; height: auto; max-height: min(52vh, 410px); object-fit: contain; background: var(--fog); }
+#exportPreview[data-empty] { height: min(36vh, 280px); }
+#exportPreviewTitle { padding: .55rem .7rem; font-weight: 650; overflow-wrap: anywhere; }
+.export-preview-meta { padding: .55rem .7rem; font-size: .8rem; overflow-wrap: anywhere; }
+#exportPreviewLegend { display: flex; flex-wrap: wrap; gap: .27rem .8rem; padding: 0; margin: 0 0 .35rem; list-style: none; }
+#exportPreviewLegend li { display: inline-flex; align-items: center; gap: .35rem; }
+.export-swatch { width: 13px; height: 3px; background: var(--export-swatch); flex: none; }
+.export-swatch[data-shape=point] { width: 8px; height: 8px; border-radius: 50%; }
+.export-swatch[data-shape=diamond] { width: 8px; height: 8px; transform: rotate(45deg); }
+.export-swatch[data-shape=square] { width: 8px; height: 8px; background: none; border: 1.5px solid var(--export-swatch); }
+.export-swatch[data-shape=area] { width: 10px; height: 8px; border: 1px solid currentColor; }
+.export-swatch[data-shape=dash] { width: 13px; height: 0; background: none; border-top: 2px dashed var(--export-swatch); }
+#exportPreviewCredits { color: var(--muted); }
+#exportFilePanel, #exportSaveForm, #exportSavePanel { display: grid; align-content: start; gap: .7rem; min-width: 0; }
+.export-field { display: grid; gap: .25rem; min-width: 0; font-size: .875rem; font-weight: 650; }
+.export-field :is(input,select,textarea) {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  padding: .38rem .5rem;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid #7d919e;
+  border-radius: 4px;
+  font: 400 1rem Inter,Arial,sans-serif;
+}
+.export-field textarea { resize: vertical; }
+#exportFilePanel fieldset { border: none; padding: 0; margin: 0; min-width: 0; }
+#exportFilePanel legend { padding: 0; margin-bottom: .25rem; font-size: .875rem; font-weight: 650; }
+.export-formats { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .35rem; }
+.export-formats label {
+  display: flex;
+  align-items: center;
+  gap: .28rem;
+  min-height: 52px;
+  padding: .28rem .3rem;
+  border: 1px solid #7d919e;
+  border-radius: 4px;
+  font-size: .875rem;
+  font-weight: 650;
+}
+.export-formats label:has(:checked) { background: #edf4f7; border-color: var(--blue); }
+.export-formats input, .export-check input { margin: 0; accent-color: var(--blue); flex: none; }
+.export-formats small { display: block; color: var(--muted); font-size: .69rem; font-weight: 500; }
+.export-check { display: flex; align-items: center; gap: .5rem; min-height: 44px; width: fit-content; font-size: .875rem; }
+.export-description summary { color: var(--blue); min-height: 44px; padding: .6rem 0; font-size: .875rem; font-weight: 650; }
+#exportAltHint, #exportCopyGroup { margin-top: .35rem; }
+.export-problem:not(:empty) { border-inline-start: 3px solid #9d2439; padding-inline-start: .5rem; color: #7d1b2d; }
+#exportSavedList { list-style: none; margin: 0; padding: 0; }
+#exportSavedList li { display: flex; justify-content: space-between; gap: .35rem; align-items: center; padding: .3rem 0; border-top: 1px solid var(--line); }
+#exportSavedList span { overflow-wrap: anywhere; }
+.export-status { font-size: .875rem; }
+.export-status:not(:empty) { margin-top: .7rem; }
+@media (max-width: 660px) {
+  .export-grid { grid-template-columns: 1fr; }
+  .map-toolbar-actions { justify-content: flex-start; }
+}
+@media (forced-colors: active) {
+  .export-button[aria-pressed=true] { border: 2px solid Highlight; }
+  .export-swatch { border: 1px solid CanvasText; }
+}
+
+.export-restored:not(:empty) { padding: .35rem 1rem; font-size: .875rem; }

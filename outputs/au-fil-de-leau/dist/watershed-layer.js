@@ -45,11 +45,8 @@ function drawWatershedLimits(c,box,s) {
   if (zoom >= 3 && !detail && !watershedLoads.has('detail') && !watershedDetailFailed) {
     loadWatershedLevel('detail').then(invalidate).catch(() => { watershedDetailFailed = true; });
   }
-  const path = new Path2D();
-  for (const item of watershedItems(data,box)) {
-    item.path ||= polyPath(item.polys);
-    path.addPath(item.path);
-  }
+  const paths = [...watershedItems(data,box)].map(item => item.path ||= polyPath(item.polys));
+  const path = combineMapPaths(c, paths);
   c.strokeStyle = zoom >= 3 ? '#263746c4' : '#34495aa8';
   c.lineWidth = (zoom >= 3 ? .9 : .78) / s;
   c.stroke(path);

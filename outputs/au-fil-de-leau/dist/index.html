@@ -169,7 +169,14 @@
     </aside>
 
     <section class="map-section" aria-labelledby="viewtitle">
-      <div class="map-toolbar"><h2 id="viewtitle">Tous les bassins</h2><span id="visibleCount">Chargement du réseau…</span></div>
+      <div class="map-toolbar">
+        <h2 id="viewtitle">Tous les bassins</h2>
+        <div class="map-toolbar-actions">
+          <span id="visibleCount">Chargement du réseau…</span>
+          <button type="button" id="exportOpen" class="export-button" aria-haspopup="dialog" aria-controls="mapExport">Enregistrer ou exporter</button>
+        </div>
+      </div>
+      <p id="mapExportRestored" class="export-restored" role="status"></p>
       <div id="mapbox">
         <div id="vectorMap" hidden aria-hidden="true"></div>
         <canvas id="map" aria-label="Carte des cours d’eau. Utilisez les flèches pour vous déplacer et les touches plus et moins pour zoomer. La recherche permet de sélectionner un lieu au clavier." tabindex="0"></canvas>
@@ -247,6 +254,87 @@
     <p>Le code original est sous licence MIT. Les données, les polices et les fonds gardent leurs licences et crédits propres. Consultez les liens du pied de page.</p>
   </dialog>
 
+  <dialog id="mapExport" aria-labelledby="exportHeading">
+    <header class="export-header">
+      <h2 id="exportHeading">Enregistrer ou exporter la carte</h2>
+      <button type="button" id="exportClose" class="export-button" autofocus>Retour à la carte</button>
+    </header>
+    <div class="export-modes" role="group" aria-label="Choisir une action">
+      <button class="export-button" type="button" id="exportSaveMode" aria-pressed="false" aria-controls="exportSavePanel">Enregistrer la vue</button>
+      <button class="export-button" type="button" id="exportFileMode" aria-pressed="true" aria-controls="exportFilePanel">Exporter un fichier</button>
+    </div>
+    <div class="export-grid">
+      <section class="export-preview" aria-labelledby="exportPreviewHeading">
+        <header>
+          <h3 id="exportPreviewHeading">Aperçu</h3>
+          <span id="exportDimensions"></span>
+        </header>
+        <figure id="exportSheet">
+          <figcaption id="exportPreviewTitle"></figcaption>
+          <canvas id="exportPreview" role="img"></canvas>
+          <div class="export-preview-meta">
+            <ul id="exportPreviewLegend" aria-label="Légende"></ul>
+            <p id="exportPreviewCredits"></p>
+          </div>
+        </figure>
+      </section>
+      <form id="exportFilePanel" aria-label="Réglages d’export">
+        <label class="export-field">Titre sur la carte
+          <input type="text" id="exportTitle" maxlength="100">
+        </label>
+        <fieldset>
+          <legend>Format du fichier</legend>
+          <div class="export-formats">
+            <label><input type="radio" name="exportFormat" value="png" checked><span>PNG<small>Image</small></span></label>
+            <label><input type="radio" name="exportFormat" value="pdf"><span>PDF<small>Impression</small></span></label>
+            <label><input type="radio" name="exportFormat" value="svg"><span>SVG<small>Vectoriel</small></span></label>
+          </div>
+        </fieldset>
+        <label class="export-field">Fond dans le fichier
+          <select id="exportGround" aria-describedby="exportFormatNote">
+            <option value="current">Fond actuel</option>
+            <option value="white">Fond blanc</option>
+          </select>
+        </label>
+        <label class="export-field" id="exportResolutionRow">Définition
+          <select id="exportResolution"></select>
+        </label>
+        <p id="exportFormatNote" class="note" role="status"></p>
+        <label class="export-check"><input type="checkbox" id="exportLegend" checked> Inclure la légende</label>
+        <details class="export-description">
+          <summary>Description de la carte</summary>
+          <label class="export-field">Texte alternatif
+            <textarea id="exportAlt" rows="3" maxlength="600" aria-describedby="exportAltHint"></textarea>
+          </label>
+          <p id="exportAltHint" class="note"></p>
+          <div class="export-modes" id="exportCopyGroup" hidden>
+            <button id="exportCopyAlt" class="export-button" type="button">Copier la description</button>
+          </div>
+        </details>
+        <p id="exportProblem" class="note export-problem" role="alert"></p>
+        <div class="export-modes">
+          <button type="submit" id="exportDownload" class="export-button export-primary" disabled>Télécharger le PNG</button>
+          <button type="button" id="exportRetry" class="export-button" hidden>Réessayer l’aperçu</button>
+        </div>
+      </form>
+      <section id="exportSavePanel" aria-label="Vues enregistrées" hidden>
+        <form id="exportSaveForm">
+          <label class="export-field">Nom de la vue
+            <input type="text" id="exportViewName" maxlength="100" required>
+          </label>
+          <p class="note">Retrouvez le cadrage, le zoom, le fond, les couches et leurs filtres dans ce navigateur.</p>
+          <div class="export-modes">
+            <button type="submit" class="export-button export-primary">Enregistrer la vue</button>
+          </div>
+        </form>
+        <h3>Mes vues</h3>
+        <p id="exportNoViews" class="note">Aucune vue enregistrée sur cet appareil.</p>
+        <ul id="exportSavedList" aria-label="Mes vues"></ul>
+      </section>
+    </div>
+    <p class="export-status" id="exportStatus" role="status" aria-atomic="true"></p>
+  </dialog>
+
   <script id="points-data-lazy" data-src="points-data.js"></script>
   <script id="protected-data-lazy" data-src="protected-data.js"></script>
   <script id="aquifers-data-lazy" data-src="aquifers-data.js"></script>
@@ -269,5 +357,7 @@
   <script id="watersheds-detail-data-lazy" data-src="watersheds-detail-data.js"></script>
   <script src="watershed-layer.js" defer></script>
   <script src="app.js" defer></script>
+  <script src="export-graphics.js" defer></script>
+  <script src="map-export.js" defer></script>
 </body>
 </html>
