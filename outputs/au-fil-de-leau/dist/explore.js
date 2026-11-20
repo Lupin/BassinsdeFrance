@@ -729,6 +729,7 @@ function initExplorer() {
     invalidate();
   });
   $('#basemap').addEventListener('change',setBasemap);
+  setBasemap();
   for (const id of ['hydroDams','nuclearPlants','flowsLayer','protectedLayer','aquiferLayer']) {
     const input=$('#'+id);
     input.addEventListener('change',()=>{
