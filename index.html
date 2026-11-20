@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="Suivez les cours d’eau de France métropolitaine et explorez les liens entre bassins, départements et milieux aquatiques.">
   <title>Bassins de France · Atlas des cours d’eau</title>
-  <link rel="stylesheet" href="outputs/au-fil-de-leau/dist/style.css?v=199fc7427158">
+  <link rel="stylesheet" href="outputs/au-fil-de-leau/dist/style.css?v=ddecc7ac53c2">
 </head>
 <body>
   <a class="skip" href="#map">Aller à la carte</a>
@@ -177,6 +177,17 @@
         </div>
       </div>
       <p id="mapExportRestored" class="export-restored" role="status"></p>
+      <div id="mapStartup" class="map-startup" role="status">
+        <p id="mapStartupMessage">Chargement de la carte…</p>
+        <div class="startup-actions">
+          <a id="mapLightLink" href="?mode=light">Ouvrir en mode léger</a>
+          <button id="mapReload" type="button" class="export-button">Recharger</button>
+        </div>
+        <details id="mapStartupDetails" hidden>
+          <summary>Détail du problème</summary>
+          <p id="mapStartupDiagnostic"></p>
+        </details>
+      </div>
       <div id="mapbox">
         <div id="vectorMap" hidden aria-hidden="true"></div>
         <canvas id="map" aria-label="Carte des cours d’eau. Utilisez les flèches pour vous déplacer et les touches plus et moins pour zoomer. La recherche permet de sélectionner un lieu au clavier." tabindex="0"></canvas>
@@ -340,6 +351,7 @@
   <script id="aquifers-data-lazy" data-src="outputs/au-fil-de-leau/dist/aquifers-data.js?v=d585f62dcefb"></script>
   <script id="crossings-data-lazy" data-src="outputs/au-fil-de-leau/dist/crossings-data.js?v=29d8450683d7"></script>
   <script id="topology-data-lazy" data-src="outputs/au-fil-de-leau/dist/topology-data.js?v=7bf8a986c663"></script>
+  <script src="outputs/au-fil-de-leau/dist/startup.js?v=a08c2e0b87ca" defer></script>
   <script src="outputs/au-fil-de-leau/dist/data.js?v=c2253c4f7828" defer></script>
   <script src="outputs/au-fil-de-leau/dist/admin.js?v=7112a2af8e64" defer></script>
   <script src="outputs/au-fil-de-leau/dist/explore.js?v=124fd4286dca" defer></script>
@@ -356,8 +368,8 @@
   <script id="watersheds-overview-data-lazy" data-src="outputs/au-fil-de-leau/dist/watersheds-overview-data.js?v=5bd6abd7bd61"></script>
   <script id="watersheds-detail-data-lazy" data-src="outputs/au-fil-de-leau/dist/watersheds-detail-data.js?v=da02d682edc9"></script>
   <script src="outputs/au-fil-de-leau/dist/watershed-layer.js?v=fde89fadcffd" defer></script>
-  <script src="outputs/au-fil-de-leau/dist/app.js?v=9479a457515e" defer></script>
+  <script src="outputs/au-fil-de-leau/dist/app.js?v=f55fe7c38b92" defer></script>
   <script src="outputs/au-fil-de-leau/dist/export-graphics.js?v=3a8d1b892bfc" defer></script>
-  <script src="outputs/au-fil-de-leau/dist/map-export.js?v=b1e70564fca6" defer></script>
+  <script src="outputs/au-fil-de-leau/dist/map-export.js?v=f200fe49413a" defer></script>
 </body>
 </html>

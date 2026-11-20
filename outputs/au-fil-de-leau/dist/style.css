@@ -41,6 +41,7 @@ h1, h2, h3, h4, p { margin: 0; }
 .masthead > button { margin-left: auto; white-space: nowrap; }
 .atlas { --sidebar-width: 253px; --detail-width: 300px; display: grid;
   grid-template-columns: var(--sidebar-width) minmax(0,1fr) var(--detail-width);
+  grid-template-rows: auto minmax(500px, calc(100vh - 155px));
   grid-template-rows: auto minmax(500px, calc(100dvh - 155px));
   max-width: 1920px; margin: 0 auto; }
 .intro-panel { grid-column: 1/-1; border-bottom: 1px solid var(--line); display: flex; align-items: center;
@@ -54,7 +55,7 @@ h1, h2, h3, h4, p { margin: 0; }
 .search-field span::after { content: ''; width: 6px; height: 1.5px; background: var(--blue); position: absolute; right: -5px; bottom: -2px; transform: rotate(45deg); }
 #search { width: 100%; min-height: 42px; padding: .55rem .75rem .55rem 2.2rem; border: 1px solid #b9c9d3; border-radius: 5px; background: white; color: var(--ink); font-size: .9rem; }
 #search::placeholder { color: #596d7a; }
-#results { position: absolute; top: 100%; z-index: 10; inset-inline: 0; max-height: min(50dvh,25rem); overflow: auto;
+#results { position: absolute; top: 100%; z-index: 10; inset-inline: 0; max-height: min(50vh,25rem); max-height: min(50dvh,25rem); overflow: auto;
   border: 1px solid #b9c9d3; border-radius: 5px; background: white; box-shadow: 0 8px 20px #213c4e1a; margin-top: .3rem; }
 #results p { padding: .7rem .75rem; }
 .result { display: block; width: 100%; border: none; border-bottom: 1px solid var(--line); padding: .58rem .7rem; text-align: left; }
@@ -189,7 +190,7 @@ select { min-height: 34px; border: 1px solid #c4d0d8; color: var(--ink); backgro
 .footer-heading p { color: var(--muted); font-size: .85rem; }
 .resource-group { display: flex; flex-direction: column; align-items: flex-start; gap: .28rem; font-size: .82rem; }
 .resource-group strong { margin-bottom: .16rem; }
-dialog { width: min(650px,calc(100vw - 2rem)); max-height: 88dvh; border: 1px solid #cbd8df; border-radius: 7px;
+dialog { width: min(650px,calc(100vw - 2rem)); max-height: 88vh; max-height: 88dvh; border: 1px solid #cbd8df; border-radius: 7px;
   padding: 1.35rem 1.55rem; color: var(--ink); line-height: 1.6; }
 dialog::backdrop { background: #0b25377a; }
 dialog h2 { padding-right: 2rem; font-size: 1.4rem; letter-spacing: -.04em; }
@@ -205,7 +206,7 @@ dialog p { margin: .4rem 0; font-size: .88rem; }
   .animation-note { display: none; }
 }
 @media (max-width: 925px) and (min-width: 761px) {
-  .atlas { grid-template-columns: 215px minmax(0,1fr); grid-template-rows: auto minmax(575px,72dvh) auto; }
+  .atlas { grid-template-columns: 215px minmax(0,1fr); grid-template-rows: auto minmax(575px,72vh) auto; grid-template-rows: auto minmax(575px,72dvh) auto; }
   .details { grid-column: 2; border: none; border-top: 1px solid var(--line); }
   .sidebar { grid-row: 2/4; }
 }
@@ -228,7 +229,7 @@ dialog p { margin: .4rem 0; font-size: .88rem; }
   .map-toolbar { min-height: 38px; padding: .35rem .72rem; }
   .map-toolbar h2 { font-size: .83rem; }
   #visibleCount { font-size: .72rem; }
-  #mapbox { flex: none; height: clamp(300px,49dvh,510px); min-height: 0; }
+  #mapbox { flex: none; height: clamp(300px,49vh,510px); height: clamp(300px,49dvh,510px); min-height: 300px; }
   .map-tools { top: 9px; right: 9px; }
   .map-tools button { width: 40px; height: 40px; }
   .animation-note { display: none; }
@@ -272,6 +273,7 @@ dialog p { margin: .4rem 0; font-size: .88rem; }
 #mapExport {
   width: min(960px, calc(100% - 1.5rem));
   max-width: none;
+  max-height: calc(100vh - 1.5rem);
   max-height: calc(100dvh - 1.5rem);
   border: 1px solid #7d919e;
   border-radius: 9px;
@@ -366,3 +368,8 @@ dialog p { margin: .4rem 0; font-size: .88rem; }
 }
 
 .export-restored:not(:empty) { padding: .35rem 1rem; font-size: .875rem; }
+
+.map-startup { padding: .65rem 1rem; font-size: .875rem; background: var(--fog); border-bottom: 1px solid var(--line); }
+.startup-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; margin-top: .35rem; }
+.startup-actions a { display: inline-flex; align-items: center; min-height: 44px; }
+#mapStartupDiagnostic { overflow-wrap: anywhere; font-size: .8rem; }

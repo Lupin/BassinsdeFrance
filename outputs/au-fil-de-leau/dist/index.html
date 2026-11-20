@@ -177,6 +177,17 @@
         </div>
       </div>
       <p id="mapExportRestored" class="export-restored" role="status"></p>
+      <div id="mapStartup" class="map-startup" role="status">
+        <p id="mapStartupMessage">Chargement de la carte…</p>
+        <div class="startup-actions">
+          <a id="mapLightLink" href="?mode=light">Ouvrir en mode léger</a>
+          <button id="mapReload" type="button" class="export-button">Recharger</button>
+        </div>
+        <details id="mapStartupDetails" hidden>
+          <summary>Détail du problème</summary>
+          <p id="mapStartupDiagnostic"></p>
+        </details>
+      </div>
       <div id="mapbox">
         <div id="vectorMap" hidden aria-hidden="true"></div>
         <canvas id="map" aria-label="Carte des cours d’eau. Utilisez les flèches pour vous déplacer et les touches plus et moins pour zoomer. La recherche permet de sélectionner un lieu au clavier." tabindex="0"></canvas>
@@ -340,6 +351,7 @@
   <script id="aquifers-data-lazy" data-src="aquifers-data.js"></script>
   <script id="crossings-data-lazy" data-src="crossings-data.js"></script>
   <script id="topology-data-lazy" data-src="topology-data.js"></script>
+  <script src="startup.js" defer></script>
   <script src="data.js" defer></script>
   <script src="admin.js" defer></script>
   <script src="explore.js" defer></script>

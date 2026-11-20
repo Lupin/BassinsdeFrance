@@ -30,7 +30,7 @@ for name in ("points", "protected", "aquifers", "crossings", "topology", "naviga
     pattern = f'<script id="{name}-data-lazy" data-src="{name}-data.js"></script>'
     inline = f'<script id="{name}-data-lazy" type="text/plain">{script_text(name+"-data.js")}</script>'
     standalone = standalone.replace(pattern, inline)
-for name in ("data", "admin", "explore", "flood", "water-transport", "watershed-layer", "app", "export-graphics", "map-export"):
+for name in ("startup", "data", "admin", "explore", "flood", "water-transport", "watershed-layer", "app", "export-graphics", "map-export"):
     pattern = rf'<script src="{name}\.js"(?: defer)?></script>'
     standalone = re.sub(pattern, lambda match: "<script>" + script_text(name+".js") + "</script>", standalone)
 Path("outputs/carte-cours-eau-france.html").write_text(standalone)

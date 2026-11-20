@@ -85,7 +85,7 @@ const number = new Intl.NumberFormat('fr-FR', {maximumFractionDigits: 1});
 const discharge = new Intl.NumberFormat('fr-FR', {maximumFractionDigits: 4});
 const wantsMotion = matchMedia('(prefers-reduced-motion: reduce)');
 let selected = names.get('loire') || D.rivers[0];
-let basin = null, playing = !wantsMotion.matches, speed = 1, phase = 0;
+let basin = null, playing = !wantsMotion.matches && !window.mapLightweight, speed = 1, phase = 0;
 let zoom = 1, tx = 0, ty = 0, w = 0, h = 0, dpr = 1, scale = 1, ox = 0, oy = 0;
 let dirty = true, flowDirty = true, frameRequest = 0, lastFrame = 0, mapIsVisible = true;
 let drag = null, hoverTime = 0, animatedBranches = [], visible = [];
@@ -149,7 +149,9 @@ function resize() {
   if (!rect.width || !rect.height || (w === rect.width && h === rect.height)) return;
   const center = w && h && (zoom !== 1 || tx || ty) ? world(w/2,h/2) : null;
   w = rect.width; h = rect.height;
-  dpr = Math.min(devicePixelRatio || 1, 1.5);
+  // Bound each surface and the combined memory cost in large browser windows.
+  dpr = Math.min(devicePixelRatio || 1, window.mapLightweight ? 1 : 1.5,
+    4096 / Math.max(w,h), Math.sqrt(3_000_000 / (w*h)));
   canvas.width = flowCanvas.width = base.width = labelsLayer.width = Math.round(w*dpr);
   canvas.height = flowCanvas.height = base.height = labelsLayer.height = Math.round(h*dpr);
   const padding = w < 570 ? 22 : 52;
@@ -299,6 +301,7 @@ function drawStatic() {
   updateLegend();
   updateBranches();
   dirty=false; flowDirty=true;
+  window.mapStartupReady?.();
 }
 
 function drawMapGeometry(c, box, s, paintMapFlood) {
@@ -567,7 +570,13 @@ function renderFrame(time) {
     const s=scale*zoom,elapsed=lastFrame?Math.min(70,time-lastFrame):interval;
     lastFrame=time;
     if (animate) phase+=elapsed*.019*speed/s;
-    if (dirty) drawStatic();
+    if (dirty) {
+      try { drawStatic(); }
+      catch (error) {
+        window.mapStartupFailure?.(error.message || String(error));
+        return;
+      }
+    }
     fx.setTransform(1,0,0,1,0,0);fx.clearRect(0,0,flowCanvas.width,flowCanvas.height);
     flowDirty=false;
     if (animate) {
@@ -712,15 +721,27 @@ document.addEventListener('visibilitychange',()=>{
   if (!document.hidden) {lastFrame=0;invalidate();}
   else if (frameRequest) {cancelAnimationFrame(frameRequest);frameRequest=0;}
 });
-new ResizeObserver(resize).observe($('#mapbox'));
-new IntersectionObserver(([entry])=>{
+if (window.ResizeObserver) new ResizeObserver(resize).observe($('#mapbox'));
+else window.addEventListener('resize',resize);
+if (window.IntersectionObserver) new IntersectionObserver(([entry])=>{
   if (entry.isIntersecting===mapIsVisible) return;
   mapIsVisible=entry.isIntersecting;
   lastFrame=0;flowDirty=true;invalidate();
 }).observe($('#mapbox'));
-document.fonts.ready.then(invalidate);
+if (document.fonts) document.fonts.ready.then(invalidate);
+if (window.mapLightweight) {
+  $('#basemap').value = 'none';
+  $('#density').value = '0';
+}
 initExplorer();
 resize();
+for (const surface of [canvas,flowCanvas,base,labelsLayer]) {
+  surface.addEventListener('contextlost',event => {
+    event.preventDefault();
+    window.mapStartupFailure?.('Le navigateur a perdu une surface de dessin.');
+  });
+  surface.addEventListener('contextrestored',invalidate);
+}
 
 initWaterTransport();
 

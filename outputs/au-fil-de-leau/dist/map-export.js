@@ -444,7 +444,7 @@ function initMapExport() {
     canvasPreview.width = canvasPreview.height = 1;
     opener.focus();
   });
-  new ResizeObserver(() => {
+  if (window.ResizeObserver) new ResizeObserver(() => {
     if (!dialog.open || busy) return;
     resize();
     setResolutions();
