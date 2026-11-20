@@ -26,7 +26,7 @@ def script_text(name):
     return (dist / name).read_text().replace("</script", "<\\/script")
 
 
-for name in ("withdrawals", "quality", "drought", "points", "protected", "aquifers", "crossings", "topology", "navigation", "locks", "lakes", "captages", "farms", "wastewater", "flood-overview", "industry", "watersheds-overview", "watersheds-detail"):
+for name in ("withdrawals", "quality", "drought", "points", "protected", "aquifers", "crossings", "topology", "communes", "navigation", "locks", "lakes", "captages", "farms", "wastewater", "flood-overview", "industry", "watersheds-overview", "watersheds-detail"):
     pattern = f'<script id="{name}-data-lazy" data-src="{name}-data.js"></script>'
     inline = f'<script id="{name}-data-lazy" type="text/plain">{script_text(name+"-data.js")}</script>'
     standalone = standalone.replace(pattern, inline)

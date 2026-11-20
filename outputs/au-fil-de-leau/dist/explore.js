@@ -5,6 +5,7 @@ let vectorMap = null, vectorReady = false, vectorKey = '', vectorRun = 0;
 let vectorScript;
 let currentTerritory = null, territoryMode = 'department', compareRun = 0;
 let searchResults = [], searchIndex = -1;
+let communeItems = null, communeLoading = null, searchGeneration = 0;
 const routeAreaCache = new WeakMap();
 const pointLayers = {dam:'hydroDams', flow:'flowsLayer', nuclear:'nuclearPlants'};
 const areaNames = {protected:'Zones protégées traversées', aquifer:'Nappes captives en recouvrement'};
@@ -449,10 +450,49 @@ async function showAreaMatches(river,type,container) {
 }
 
 function clearSearch() {
+  searchGeneration++;
   $('#search').value='';$('#results').replaceChildren();$('#results').hidden=true;searchIndex=-1;
+}
+function getCommunes() {
+  if (communeItems) return Promise.resolve(communeItems);
+  if (!communeLoading) communeLoading=loadDataset('communes','communes-data.js','COMMUNES').then(records=>{
+    communeItems=records.map(([code,name,lon,lat,departmentCode])=>{
+      const department=departmentById.get(departmentCode);
+      return department ? {code,name,department,departmentCode,point:project(lon,lat),key:normalize(name)} : null;
+    }).filter(Boolean);
+    return communeItems;
+  }).catch(error=>{communeLoading=null;throw error;});
+  return communeLoading;
+}
+function communeSearch(query) {
+  const matches=[];
+  for (const item of communeItems) {
+    const rank=item.key===query?0:item.key.startsWith(query)?1:item.code.startsWith(query)?2:item.key.includes(query)?3:-1;
+    if (rank>=0) matches.push({rank,item});
+  }
+  matches.sort((a,b)=>a.rank-b.rank||a.item.name.localeCompare(b.item.name,'fr')||a.item.code.localeCompare(b.item.code));
+  return matches.slice(0,8).map(({item})=>({type:'commune',item,name:item.name,
+    meta:'Commune · '+item.department.name+' ('+item.departmentCode+') · '+item.code}));
+}
+function renderSearchResults(holder,results,message='') {
+  searchResults=results;
+  holder.replaceChildren();
+  if (!results.length && !message) holder.append(node('p','Aucun résultat pour « '+$('#search').value+' ».','note'));
+  for (const result of results) {
+    const button=makeButton('','result',()=>openSearchResult(result));
+    button.append(node('strong',result.name),node('span',result.meta));
+    holder.append(button);
+  }
+  if (message) {
+    const status=node('p',message,'note');
+    status.setAttribute('role','status');
+    holder.append(status);
+  }
+  holder.hidden=false;
 }
 function renderSearch() {
   const input=$('#search'), holder=$('#results'), query=normalize(input.value);
+  const generation=++searchGeneration;
   searchIndex=-1; holder.replaceChildren();holder.hidden=!query||query.length<2;
   if (holder.hidden) return;
   const exact = r=>r.key===query ? 0 : r.key.startsWith(query) ? 1 : 2;
@@ -463,18 +503,26 @@ function renderSearch() {
     .map(item=>({type:'department',item,name:item.chief,meta:'Chef-lieu · '+item.name+' ('+item.code+')'}));
   const regions=geography?.regions.filter(r=>normalize(r.name).includes(query))
     .map(item=>({type:'region',item,name:item.name,meta:'Région administrative'})) || [];
-  searchResults=[...rivers,...admin,...regions,...observationSearch(query)];
-  if (!searchResults.length) holder.append(node('p','Aucun résultat pour « '+input.value+' ».','note'));
-  for (const result of searchResults) {
-    const button=makeButton('','result',()=>openSearchResult(result));
-    button.append(node('strong',result.name),node('span',result.meta));
-    holder.append(button);
+  const existing=[...rivers,...admin,...regions,...observationSearch(query)];
+  if (communeItems) {
+    renderSearchResults(holder,[...rivers,...communeSearch(query),...admin,...regions,...observationSearch(query)]);
+    return;
   }
+  renderSearchResults(holder,existing,'Recherche des communes…');
+  getCommunes().then(()=>{
+    if (generation!==searchGeneration||normalize(input.value)!==query) return;
+    renderSearchResults(holder,[...rivers,...communeSearch(query),...admin,...regions,...observationSearch(query)]);
+  }).catch(()=>{
+    if (generation!==searchGeneration||normalize(input.value)!==query) return;
+    renderSearchResults(holder,existing,existing.length?'La recherche des communes est indisponible.':'La recherche des communes est indisponible; les cours d’eau restent recherchables.');
+  });
 }
 function openSearchResult(result) {
   if (result.type==='river') chooseRiver(result.item,{focus:true,scope:true});
   else if (observationLayers[result.type]) {
     clearSearch();focusPoint(result.item.point,8);showObservationFeature(result.type,result.item);
+  } else if (result.type==='commune') {
+    clearSearch();focusPoint(result.item.point,8);showFeature({type:'commune',item:result.item});
   } else selectTerritory(result.item,result.type,{focus:true,reveal:true});
 }
 function searchKey(event) {
@@ -554,7 +602,7 @@ function featureLayerLabel(type) {
     captage:'Captages d’eau potable',farm:'Élevages recensés (ICPE)',industry:'Sites industriels et Seveso',
     flow:'Stations et débits',dam:'Ouvrages hydroélectriques',nuclear:'Centrales nucléaires',
     protected:'Zones protégées',aquifer:'Nappes captives',watershed:'Sous-bassins topographiques',
-    department:'Limites départementales',region:'Limites régionales'};
+    commune:'Commune recherchée',department:'Limites départementales',region:'Limites régionales'};
   return labels[type] || waterTransportLayers[type]?.label || observationLayers[type]?.label || 'Donnée cartographique';
 }
 function closeFeatureDetail() {
@@ -590,7 +638,7 @@ function showFeature({type,item}) {
   if (['withdrawals','quality','drought'].includes(type)) { showObservationFeature(type,item); return; }
   const container=$('#featureDetail');
   container.dataset.kind=type;
-  featureHeader(container,type,type==='department'||type==='region'?item.name:item.n);
+  featureHeader(container,type,type==='department'||type==='region'||type==='commune'?item.name:item.n);
   let fields=[],note='';
   const supplementary=[],actions=[];
   if (type==='lakes') {
@@ -632,12 +680,16 @@ function showFeature({type,item}) {
     note='Le recouvrement cartographique ne suffit pas à établir un échange d’eau.';
   } else if (type==='department'||type==='region') {
     fields=type==='department'?[['Département',item.code],['Chef-lieu',item.chief]]:[['Type','Région administrative']];
+  } else if (type==='commune') {
+    fields=[['Département',item.department.name+' ('+item.departmentCode+')'],['Code INSEE',item.code],['Repère','Mairie de la commune']];
+    note='Seule la commune recherchée est repérée. Ses limites et celles des autres communes ne sont pas dessinées.';
   } else if (type==='watershed') {
     fields=[['Référentiel','BD TOPAGE® 2026 · Sandre'],['Identifiant',item.id],['Exutoire',item.outlet]];
     note='Périmètre qui contient le point choisi.';
   }
   if (item.link) fields.push(['Association au réseau',associationLabel(item)]);
   if (item.url && /^https:\/\//.test(item.url)) supplementary.push(textLink('Voir la fiche INPN',item.url));
+  if (type==='commune') supplementary.push(textLink('Fiche de la commune · API officielle','https://geo.api.gouv.fr/communes/'+encodeURIComponent(item.code)));
   if (type==='industry'||type==='farm') supplementary.push(textLink('Voir la fiche Géorisques','https://www.georisques.gouv.fr/risques/installations/donnees/details/'+encodeURIComponent(item.id)));
   if (type==='flow' && item.station) supplementary.push(textLink('Voir la station sur HydroPortail','https://www.hydro.eaufrance.fr/stationhydro/'+encodeURIComponent(item.station||item.site)+'/fiche'));
   if (item.point) actions.push(makeButton('Localiser cet élément','text-button',()=>focusPoint(item.point,8)));
@@ -766,7 +818,7 @@ function initExplorer() {
   search.addEventListener('keydown',searchKey);
   document.addEventListener('keydown',event=>{if(event.key==='Escape')closeChoices();});
   document.addEventListener('pointerdown',event=>{
-    if (!event.target.closest('.search-panel')) {$('#results').hidden=true;}
+    if (!event.target.closest('.search-panel')) {searchGeneration++;$('#results').hidden=true;}
     if (!event.target.closest('#mapbox')) closeChoices();
   });
   search.addEventListener('focus',()=>{if(search.value.length>=2)renderSearch();});
