@@ -16,7 +16,6 @@ class PageAudit(HTMLParser):
         self.controls = []
         self.labels_for = set()
         self.headings = []
-        self.heading_text = []
         self.main_count = 0
         self.h1_count = 0
         self.lang = False
@@ -47,7 +46,6 @@ class PageAudit(HTMLParser):
             self.headings.append(level)
             if level == 1:
                 self.h1_count += 1
-            self.heading_text.append([level, ""])
         if tag == "canvas" and element_id == "map":
             self.canvas_map = attrs
         if tag == "dialog" and element_id == "mapExport":
@@ -60,11 +58,6 @@ class PageAudit(HTMLParser):
             if self.stack[index][0] == tag:
                 del self.stack[index:]
                 return
-
-    def handle_data(self, data):
-        if self.heading_text and any(tag == "h" + str(self.heading_text[-1][0]) for tag, _ in self.stack):
-            self.heading_text[-1][1] += data
-
 
 def audit(path):
     parser = PageAudit()

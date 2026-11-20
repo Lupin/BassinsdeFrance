@@ -24,7 +24,7 @@ const routes = evaluate(`Object.keys(specs).map(key => {
 })`);
 const rows = JSON.parse(JSON.stringify(routes));
 
-assert.ok(rows.length >= 40, `Seulement ${rows.length} parcours documentés`);
+assert.equal(rows.length, 48, `Nombre inattendu de parcours documentés : ${rows.length}`);
 for (const route of rows) {
   assert.ok(route.river, `${route.name}: cours d’eau absent`);
   assert.ok(route.length > 0, `${route.name}: longueur non positive`);
