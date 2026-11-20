@@ -12,7 +12,7 @@ Les données de la BD TOPAGE® et les limites administratives sont stockées ave
 
 ## Enregistrer ou exporter une vue
 
-Dans la barre de la carte, **Enregistrer ou exporter** ouvre l’aperçu. **Enregistrer la vue** garde le cadrage et les réglages dans le navigateur actuel. **Exporter un fichier** propose le PNG en deux définitions, le PDF en A4 et le SVG vectoriel. L’animation est figée dans les fichiers. La description modifiable accompagne le PDF et le SVG. Elle peut être copiée pour le partage d’un PNG.
+Dans la barre de la carte, **Mes vues** donne accès aux cadrages enregistrés et à l’action **Enregistrer la vue actuelle**. **Afficher** rétablit une vue et ses réglages dans le navigateur actuel. Le bouton **Exporter** propose le PNG en deux définitions, le PDF en A4 et le SVG vectoriel. L’animation est figée dans les fichiers. La description modifiable accompagne le PDF et le SVG. Elle peut être copiée pour le partage d’un PNG.
 
 Le PNG et le PDF peuvent inclure le fond actuel si ses tuiles peuvent être lues par le navigateur. Le SVG utilise le fond blanc et les couches vectorielles. Les enveloppes d’inondation, affichées à partir d’images, restent disponibles en PNG et PDF. Les crédits des sources figurent dans chaque fichier.
 
@@ -34,3 +34,20 @@ Le site est publié avec GitHub Pages depuis la racine de la branche `main`.
 
 
 En cas de difficulté d’affichage, [le mode léger](https://bassinsdefrance.fr/?mode=light) utilise un fond blanc, un réseau moins dense et l’animation en pause au démarrage. Un encart de chargement permet de relancer la page et affiche le détail d’une erreur de démarrage lorsqu’elle est détectée. Dans ce mode explicite, les surfaces de dessin sont limitées à 4 096 pixels par côté et 3 millions de pixels par surface. Le mode standard conserve sa résolution de rendu, sa densité et son animation par défaut.
+
+
+## État de l’eau et usages
+
+Trois couches supplémentaires se trouvent dans **Couches de données → Eau et milieux**.
+
+- **Prélèvements par usage** présente les volumes annuels BNPE de 2022 à 2024, par ouvrage. Le filtre propose les usages et un volume minimal. L’eau turbinée dispose d’un filtre spécifique et est exclue du choix « Tous usages hors eau turbinée ».
+- **Qualité des rivières** présente les analyses Naïades de 2025 pour les nitrates, les orthophosphates et l’oxygène dissous. Pour chaque station, la carte utilise le dernier jour analysé de la période choisie. Si plusieurs valeurs quantifiées existent ce jour, leur médiane est représentée. Les classes de concentration sont descriptives. Les notations génériques mg/L sont explicitées par analyte (NO3, PO4, O2). Les valeurs exprimées par masse de N ou de P conservent leur unité et sont représentées en gris. Les résultats avec limite analytique ou non comparables sont gris. Les fiches indiquent dates, unités et qualification, avec une courbe des valeurs quantifiées et un tableau.
+- **Écoulements et assecs** utilise les observations ONDE de 2025 et 2026 disponibles lors de l’extraction. Chaque mois affiche la dernière observation de chaque station. Le mois proposé au départ est le plus récent couvrant au moins la moitié de la couverture mensuelle maximale du jeu extrait. Une station sans observation dans le mois reste absente.
+
+Des cercles, carrés et triangles distinguent les couches. Pour éviter de recouvrir la carte, un symbole par cellule de 22 pixels est conservé pour chaque couche. Les volumes les plus importants et les états d’écoulement les plus dégradés sont prioritaires dans ces cellules. Les symboles de couches différentes sont légèrement décalés de cinq pixels lorsqu’elles sont combinées. Les compteurs permettent de connaître le nombre de sites et le nombre de symboles. Le zoom permet de séparer davantage les sites. La recherche retrouve aussi les stations et ouvrages des nouvelles couches actives.
+
+La visibilité des tracés, de leurs noms et de leur animation se règle de 0 à 100 %. Les boutons **Visible**, **Atténué** et **Masqué** donnent un accès rapide au même réglage lorsque ces couches sont activées. Les limites administratives et les couches thématiques gardent leur visibilité. Les tracés propres au fond cartographique peuvent subsister.
+
+Les vues enregistrées et les exports reprennent les filtres, les périodes et la visibilité du réseau. Les données sont des extractions datées et se chargent à la première activation. Les enregistrements manquants restent distingués des volumes nuls et des observations d’assec.
+
+Régénérer les données avec `python3 work/build-water-observations.py`, puis `python3 work/package.py`. Le script vérifie la pagination complète et réduit les répétitions textuelles dans les fichiers. Les réponses brutes sont mises en cache dans `/tmp/bassins-hubeau-cache`. `node work/check-observations.cjs` vérifie le calcul des volumes filtrés, les périodes, les médianes et les absences d’observation.

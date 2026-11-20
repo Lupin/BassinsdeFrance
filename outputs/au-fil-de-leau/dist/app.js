@@ -261,6 +261,7 @@ function drawRiver(c,river) {
   }
   c.stroke();
 }
+function riverOpacity() { return Number($('#riverOpacity').value)/100; }
 function threshold() { return [38,15,5,1.8][+$('#density').value]/Math.max(1,zoom*.8); }
 function visibleRivers(box) {
   const pool = new Set();
@@ -329,17 +330,21 @@ function drawMapGeometry(c, box, s, paintMapFlood) {
   if (highlightedCrossing) drawArea(c,highlightedCrossing,colors[highlightedCrossing.basin]+'48',colors[highlightedCrossing.basin],s);
 
   const rivers = visibleRivers(box);
-  for (const river of rivers) {
+  const opacity = riverOpacity();
+  c.save();
+  for (const river of opacity>0?rivers:[]) {
     if (river===selected) continue;
     const isRelevant = !basin || river.b===basin;
-    c.globalAlpha = isRelevant ? (river.l>100?.99:river.l>35?.74:.44) : .10;
+    c.globalAlpha = opacity * (isRelevant ? (river.l>100?.99:river.l>35?.74:.44) : .10);
     c.strokeStyle = colors[river.b];
     c.lineWidth = (river.l>350?1.8:river.l>100?1.22:river.l>35?.80:.46)/Math.pow(s,.91);
     drawRiver(c,river);
   }
-  c.globalAlpha=1;
+  c.restore();
   drawWaterTransport(c,box,s);
-  if (selected) {
+  c.save();
+  c.globalAlpha=opacity;
+  if (selected && opacity>0) {
     const route = currentRoute(selected);
     if (route?.full?.length) {
       route.path ||= linePath(route.full);
@@ -359,6 +364,7 @@ function drawMapGeometry(c, box, s, paintMapFlood) {
     }
   }
 
+  c.restore();
   return rivers;
 }
 
@@ -374,6 +380,7 @@ function drawMapAnnotations(c, box, s, rivers, style, ratio=dpr) {
     if (overlaps(item.box,box)) outline(c,item,'#3b4654',1.65/s,[5/s,3/s]);
   }
   drawWaterTransport(c,box,s,true);
+  drawObservations(c,box,s);
   drawLabels(c,rivers,style,ratio);
   drawPoints(c,ratio);
 
@@ -419,7 +426,9 @@ function drawLabels(c,rivers,style,ratio) {
       } else label(d.chief,d.point,'#354252',11,true);
     }
   }
-  if ($('#cities').checked) {
+  if ($('#cities').checked && riverOpacity()>0) {
+    c.save();
+    c.globalAlpha=riverOpacity();
     const candidates = [...rivers].reverse().filter(r => {
       if (basin && r.b!==basin) return false;
       if (zoom<1.45) return overviewNames.has(r.key) && names.get(r.key)===r;
@@ -433,6 +442,7 @@ function drawLabels(c,rivers,style,ratio) {
       const p=line[Math.floor(line.length/2)];
       if (p && label(displayName(r.n),p,colors[r.b],r===selected?13:11)) used.add(r.n);
     }
+    c.restore();
   }
   if (style==='none' && zoom<2.1) {
     for (const [name,lon,lat] of [['La Manche',-3.1,49.55],['Océan Atlantique',-4.5,45.4],['Méditerranée',5.7,42.15]]) {
@@ -567,7 +577,7 @@ function renderFrame(time) {
   frameRequest=0;
   if (document.hidden || !w || !h) return;
   const interval=drag ? 1000/16 : 1000/28;
-  const animate=playing && mapIsVisible;
+  const animate=playing && mapIsVisible && riverOpacity()>0;
   if ((dirty && !drag) || ((animate || dirty) && time-lastFrame>=interval) || flowDirty) {
     const s=scale*zoom,elapsed=lastFrame?Math.min(70,time-lastFrame):interval;
     lastFrame=time;
@@ -583,7 +593,7 @@ function renderFrame(time) {
     flowDirty=false;
     if (animate) {
       transform(fx);
-      fx.globalAlpha=.93;
+      fx.globalAlpha=.93*riverOpacity();
       for (const {r,f,count} of animatedBranches) for (let i=0;i<count;i++) {
         drawParticle(fx,f,phase+i*f.total/count+r.i*.37,(zoom>2?1.5:1.2)/s,colors[r.b],true);
       }
@@ -604,6 +614,7 @@ function pointToSegment(p,a,b) {
   return dist2(p,[a[0]+ratio*dx,a[1]+ratio*dy]);
 }
 function nearestRiver(point,tolerance) {
+  if (!riverOpacity()) return null;
   const neighborhood = [point[0]-tolerance,point[1]-tolerance,point[0]+tolerance,point[1]+tolerance];
   const candidates=new Set();
   cellsFor(neighborhood,key=>{for(const r of riverGrid.get(key)||[]) candidates.add(r);});
@@ -630,6 +641,7 @@ function clickOptions(x,y,includeTerritories=true) {
   const nearby = plotted.filter(hit=>dist2(hit.p,screen)<=hit.radius**2).sort((a,b)=>dist2(a.p,screen)-dist2(b.p,screen));
   for (const hit of nearby.slice(0,4)) hits.push(hit);
   for (const group of clusters) if (dist2(group.p,screen)<=110) hits.push({type:'cluster',item:group});
+  hits.push(...observationHits(screen));
   hits.push(...waterTransportHits(p,6/(scale*zoom)));
   const r=nearestRiver(p,7/(scale*zoom));
   if (r) hits.push({type:'river',item:r});
@@ -750,3 +762,5 @@ initWaterTransport();
 initFloodLayer();
 
 initWatershedLayer();
+
+initObservations();

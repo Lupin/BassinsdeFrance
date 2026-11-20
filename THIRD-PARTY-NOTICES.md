@@ -27,3 +27,6 @@ Le fond **Positron** est chargé depuis l’instance publique [OpenFreeMap](http
 - **Industrie et sites Seveso** : export national [Installations industrielles de Géorisques](https://www.georisques.gouv.fr/donnees/bases-de-donnees/installations-industrielles), extrait le 19 novembre 2026, filtré et reprojeté en WGS84.
 
 - **Limites des sous-bassins topographiques** : [BD TOPAGE® 2026, IGN, OFB et Sandre](https://www.data.gouv.fr/datasets/bassins-versant-topographiques-metropole-2026-bd-topage-r), Licence Ouverte 2.0. Géométries reprojetées et simplifiées pour l’affichage.
+
+
+- **Prélèvements, analyses et écoulements** — extraits des API Hub’Eau, à partir de la BNPE, de Naïades et d’ONDE (OFB). Les fichiers indiquent leur date d’extraction. Les périodes sont précisées dans l’interface et les exports. Les fiches officielles et leurs conditions de réutilisation sont liées dans le pied de page. Les classes de concentration affichées sont descriptives et les observations d’écoulement restent datées.

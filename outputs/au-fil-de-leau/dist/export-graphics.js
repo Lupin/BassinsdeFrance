@@ -162,12 +162,14 @@ function paintExportSwatch(context, item, x, y) {
   context.lineWidth = 2;
   if (item.shape==='point') {
     context.beginPath(); context.arc(x+5,y-3,3.5,0,Math.PI*2); context.fill();
+  } else if (item.shape==='triangle') {
+    context.beginPath();context.moveTo(x+5,y-8);context.lineTo(x+10,y+1);context.lineTo(x,y+1);context.closePath();context.fill();
+  } else if (item.shape==='square') {
+    context.fillRect(x+2,y-7,7,7);
   } else if (item.shape==='diamond') {
     context.beginPath();
     context.moveTo(x+5,y-8); context.lineTo(x+10,y-3); context.lineTo(x+5,y+2); context.lineTo(x,y-3);
     context.closePath(); context.fill();
-  } else if (item.shape==='square') {
-    context.strokeRect(x+2,y-7,7,7);
   } else if (item.shape==='dash') {
     context.beginPath(); context.setLineDash([3,2]); context.moveTo(x,y-3); context.lineTo(x+12,y-3); context.stroke(); context.setLineDash([]);
   } else {
@@ -267,7 +269,8 @@ async function makeMapPDF(map, options) {
       const x = item.x, base = height-y;
       let symbol = fmt(x)+' '+fmt(base+2)+' 11 2 re f';
       if (item.shape==='dash') symbol = '[3 2] 0 d 1.5 w '+fmt(x)+' '+fmt(base+3)+' m '+fmt(x+11)+' '+fmt(base+3)+' l S';
-      if (item.shape==='square') symbol = fmt(x+2)+' '+fmt(base)+' 7 7 re S';
+      if (item.shape==='square') symbol = fmt(x+2)+' '+fmt(base)+' 7 7 re f';
+      if (item.shape==='triangle') symbol = fmt(x+5)+' '+fmt(base+9)+' m '+fmt(x+10)+' '+fmt(base)+' l '+fmt(x)+' '+fmt(base)+' l h f';
       if (item.shape==='area') symbol = fmt(x)+' '+fmt(base)+' 11 6 re f';
       if (item.shape==='diamond') symbol = fmt(x+5)+' '+fmt(base+9)+' m '+fmt(x+10)+' '+fmt(base+4)+' l '+
         fmt(x+5)+' '+fmt(base-1)+' l '+fmt(x)+' '+fmt(base+4)+' l h f';

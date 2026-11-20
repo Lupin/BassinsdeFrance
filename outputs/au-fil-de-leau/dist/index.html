@@ -54,6 +54,9 @@
         <label class="check"><input type="checkbox" id="regions"> Limites des régions · gris foncé</label>
         <label class="check"><input type="checkbox" id="cities" checked> Noms des cours d’eau</label>
         <label class="check"><input type="checkbox" id="prefectures" checked> Chefs-lieux des départements</label>
+        <label class="density" for="riverOpacity">Visibilité des cours d’eau <output id="riverOpacityLabel" for="riverOpacity">100 %</output></label>
+        <input id="riverOpacity" type="range" min="0" max="100" step="10" value="100">
+        <div class="range-label"><span>Masqués</span><span>Visibles</span></div>
         <label class="density" for="density">Détail du réseau <output id="densityLabel" for="density">Progressif</output></label>
         <input id="density" type="range" min="0" max="3" step="1" value="1">
         <div class="range-label"><span>Principal</span><span>Très fin</span></div>
@@ -62,6 +65,28 @@
         <summary>Couches de données</summary>
         <fieldset class="layer-group">
           <legend>Eau et milieux</legend>
+          <label class="check"><input type="checkbox" id="water-withdrawals" aria-describedby="withdrawalsHelp"> Prélèvements par usage <span id="withdrawalsStatus" class="layer-count" role="status"></span></label>
+          <div id="withdrawalsOptions" class="subcontrols" hidden>
+            <label for="withdrawalYear">Année</label><select id="withdrawalYear"></select>
+            <label for="withdrawalUsage">Usage</label><select id="withdrawalUsage"><option value="all">Tous les usages</option></select>
+            <label for="withdrawalMinimum">Volume annuel minimal</label>
+            <select id="withdrawalMinimum"><option value="0">Tous les volumes</option><option value="10000">10 000 m³</option><option value="100000">100 000 m³</option><option value="1000000">1 million de m³</option></select>
+            <p id="withdrawalsHelp" class="sidebar-note">Cercles bleus proportionnels aux volumes annuels déclarés par ouvrage. L’eau turbinée dispose d’un filtre dédié. Source BNPE.</p>
+          </div>
+          <label class="check"><input type="checkbox" id="water-quality" aria-describedby="qualityHelp"> Qualité des rivières <span id="qualityStatus" class="layer-count" role="status"></span></label>
+          <div id="qualityOptions" class="subcontrols" hidden>
+            <label for="qualityParameter">Paramètre analysé</label><select id="qualityParameter"><option value="1340">Nitrates</option><option value="1433">Orthophosphates</option><option value="1311">Oxygène dissous</option></select>
+            <label for="qualityMonth">Période des analyses</label><select id="qualityMonth"></select>
+            <p id="qualityHelp" class="sidebar-note">Carrés violets. Dernier jour analysé dans la période choisie. Médiane si plusieurs résultats quantifiés ce jour. Date et unité dans la fiche.</p>
+            <div id="qualityLegend" class="observation-legend"></div>
+          </div>
+          <label class="check"><input type="checkbox" id="water-drought" aria-describedby="droughtHelp"> Écoulements et assecs <span id="droughtStatus" class="layer-count" role="status"></span></label>
+          <div id="droughtOptions" class="subcontrols" hidden>
+            <label for="droughtMonth">Mois d’observation</label><select id="droughtMonth"></select>
+            <label for="droughtState">État observé</label><select id="droughtState"><option value="all">Tous les états</option><option value="dry">Assecs et écoulements non visibles</option><option value="3">Assecs uniquement</option></select>
+            <p id="droughtHelp" class="sidebar-note">Triangles. Dernière observation de chaque station dans le mois choisi. Une absence de point indique une absence d’observation affichable.</p>
+            <div id="droughtLegend" class="observation-legend"></div>
+          </div>
           <label class="check"><input type="checkbox" id="flowsLayer"> Stations et débits <span id="flowCount" class="layer-count"></span></label>
           <div id="flowControls" class="subcontrols" hidden>
             <label for="flowFilter">Débit observé</label>
@@ -174,7 +199,8 @@
         <div class="map-toolbar-actions">
           <span id="visibleCount">Chargement du réseau…</span>
           <button type="button" id="mapFullscreen" class="export-button" aria-pressed="false" aria-controls="mapbox">Plein écran</button>
-          <button type="button" id="exportOpen" class="export-button" aria-haspopup="dialog" aria-controls="mapExport">Enregistrer ou exporter</button>
+          <button type="button" id="savedViewsOpen" class="export-button" aria-haspopup="dialog" aria-controls="mapExport">Mes vues</button>
+          <button type="button" id="exportOpen" class="export-button" aria-haspopup="dialog" aria-controls="mapExport">Exporter</button>
         </div>
       </div>
       <p id="fullscreenStatus" class="export-restored" role="status"></p>
@@ -202,6 +228,17 @@
         <div id="mapChoices" class="map-choices" hidden></div>
         <div class="map-caption"><span class="north" aria-hidden="true">↑ N</span><span id="mapScale" aria-hidden="true"></span></div>
         <div id="mapAttribution" hidden></div>
+      </div>
+      <div class="observation-summary" id="observationSummary" hidden>
+        <div class="observation-presets" role="group" aria-label="Visibilité des cours d’eau pour comparer les couches">
+          <span>Réseau des cours d’eau</span>
+          <button type="button" data-river-opacity="100" aria-pressed="true">Visible</button>
+          <button type="button" data-river-opacity="20" aria-pressed="false">Atténué</button>
+          <button type="button" data-river-opacity="0" aria-pressed="false">Masqué</button>
+        </div>
+        <p id="observationCounts" role="status"></p>
+        <p class="note">Les symboles proches d’une même couche sont espacés à l’écran. Zoomez pour les distinguer. Les années et dates restent propres à chaque source.</p>
+        <div id="observationKey" class="observation-key" aria-label="Légende des observations"></div>
       </div>
       <div id="layerInfo" class="map-legend" hidden></div>
       <div class="animation-bar">
@@ -233,6 +270,9 @@
       <a href="https://www.georisques.gouv.fr/risques/inondations" target="_blank" rel="noopener">Enveloppes d’inondation · Géorisques</a>
       <a href="https://www.georisques.gouv.fr/donnees/bases-de-donnees/installations-industrielles" target="_blank" rel="noopener">Installations industrielles et Seveso · Géorisques</a>
       <a href="https://www.data.gouv.fr/datasets/bassins-versant-topographiques-metropole-2026-bd-topage-r" target="_blank" rel="noopener">Sous-bassins topographiques · BD TOPAGE® 2026</a>
+      <a href="https://www.data.gouv.fr/dataservices/hubeau-prelevements-en-eau" target="_blank" rel="noopener">Prélèvements · BNPE / Hub’Eau</a>
+      <a href="https://www.data.gouv.fr/dataservices/hubeau-qualite-des-cours-deau" target="_blank" rel="noopener">Analyses · Naïades / Hub’Eau</a>
+      <a href="https://www.data.gouv.fr/dataservices/hubeau-ecoulement-des-cours-deau" target="_blank" rel="noopener">Écoulements et assecs · ONDE / OFB</a>
       <a href="https://hubeau.eaufrance.fr/page/api-hydrometrie" target="_blank" rel="noopener">Stations et débits · Hub’Eau</a>
     </div>
     <div class="resource-group"><strong>Territoires et milieux</strong>
@@ -249,6 +289,7 @@
       <a href="https://github.com/Lupin/BassinsdeFrance/blob/main/LICENSE" target="_blank" rel="noopener">Code original · MIT</a>
       <a href="https://github.com/Lupin/BassinsdeFrance/blob/main/THIRD-PARTY-NOTICES.md" target="_blank" rel="noopener">Licences des ressources tierces</a>
     </div>
+    <p class="conception-credit">Conception initiale · G. Abegg-Gauthey</p>
   </footer>
 
   <dialog id="sources" aria-labelledby="methodTitle">
@@ -269,12 +310,12 @@
 
   <dialog id="mapExport" aria-labelledby="exportHeading">
     <header class="export-header">
-      <h2 id="exportHeading">Enregistrer ou exporter la carte</h2>
+      <h2 id="exportHeading">Exporter la carte</h2>
       <button type="button" id="exportClose" class="export-button" autofocus>Retour à la carte</button>
     </header>
     <div class="export-modes" role="group" aria-label="Choisir une action">
-      <button class="export-button" type="button" id="exportSaveMode" aria-pressed="false" aria-controls="exportSavePanel">Enregistrer la vue</button>
-      <button class="export-button" type="button" id="exportFileMode" aria-pressed="true" aria-controls="exportFilePanel">Exporter un fichier</button>
+      <button class="export-button" type="button" id="exportSaveMode" aria-pressed="false" aria-controls="exportSavePanel">Mes vues</button>
+      <button class="export-button" type="button" id="exportFileMode" aria-pressed="true" aria-controls="exportFilePanel">Exporter</button>
     </div>
     <div class="export-grid">
       <section class="export-preview" aria-labelledby="exportPreviewHeading">
@@ -331,23 +372,29 @@
         </div>
       </form>
       <section id="exportSavePanel" aria-label="Vues enregistrées" hidden>
-        <form id="exportSaveForm">
-          <label class="export-field">Nom de la vue
-            <input type="text" id="exportViewName" maxlength="100" required>
-          </label>
-          <p class="note">Retrouvez le cadrage, le zoom, le fond, les couches et leurs filtres dans ce navigateur.</p>
-          <div class="export-modes">
-            <button type="submit" class="export-button export-primary">Enregistrer la vue</button>
-          </div>
-        </form>
-        <h3>Mes vues</h3>
-        <p id="exportNoViews" class="note">Aucune vue enregistrée sur cet appareil.</p>
-        <ul id="exportSavedList" aria-label="Mes vues"></ul>
+        <p class="note">Vos cadrages et réglages conservés dans ce navigateur.</p>
+        <p id="exportNoViews" class="note">Vous n’avez pas encore enregistré de vue.</p>
+        <ul id="exportSavedList" aria-label="Mes vues enregistrées"></ul>
+        <details class="save-current-view">
+          <summary>Enregistrer la vue actuelle</summary>
+          <form id="exportSaveForm">
+            <label class="export-field">Nom de cette vue
+              <input type="text" id="exportViewName" maxlength="100" required>
+            </label>
+            <p class="note">Le cadrage, le zoom, le fond, les couches et leurs filtres seront conservés.</p>
+            <div class="export-modes">
+              <button type="submit" class="export-button export-primary">Enregistrer cette vue</button>
+            </div>
+          </form>
+        </details>
       </section>
     </div>
     <p class="export-status" id="exportStatus" role="status" aria-atomic="true"></p>
   </dialog>
 
+  <script id="withdrawals-data-lazy" data-src="withdrawals-data.js"></script>
+  <script id="quality-data-lazy" data-src="quality-data.js"></script>
+  <script id="drought-data-lazy" data-src="drought-data.js"></script>
   <script id="points-data-lazy" data-src="points-data.js"></script>
   <script id="protected-data-lazy" data-src="protected-data.js"></script>
   <script id="aquifers-data-lazy" data-src="aquifers-data.js"></script>
@@ -370,6 +417,7 @@
   <script id="watersheds-overview-data-lazy" data-src="watersheds-overview-data.js"></script>
   <script id="watersheds-detail-data-lazy" data-src="watersheds-detail-data.js"></script>
   <script src="watershed-layer.js" defer></script>
+  <script src="observations.js" defer></script>
   <script src="app.js" defer></script>
   <script src="fullscreen.js" defer></script>
   <script src="export-graphics.js" defer></script>

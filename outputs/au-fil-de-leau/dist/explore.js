@@ -451,7 +451,7 @@ function renderSearch() {
     .map(item=>({type:'department',item,name:item.chief,meta:'Chef-lieu · '+item.name+' ('+item.code+')'}));
   const regions=geography?.regions.filter(r=>normalize(r.name).includes(query))
     .map(item=>({type:'region',item,name:item.name,meta:'Région administrative'})) || [];
-  searchResults=[...rivers,...admin,...regions];
+  searchResults=[...rivers,...admin,...regions,...observationSearch(query)];
   if (!searchResults.length) holder.append(node('p','Aucun résultat pour « '+input.value+' ».','note'));
   for (const result of searchResults) {
     const button=makeButton('','result',()=>openSearchResult(result));
@@ -461,7 +461,9 @@ function renderSearch() {
 }
 function openSearchResult(result) {
   if (result.type==='river') chooseRiver(result.item,{focus:true,scope:true});
-  else selectTerritory(result.item,result.type,{focus:true});
+  else if (observationLayers[result.type]) {
+    clearSearch();focusPoint(result.item.point,8);showObservationFeature(result.type,result.item);
+  } else selectTerritory(result.item,result.type,{focus:true});
 }
 function searchKey(event) {
   if (event.key==='Escape') {clearSearch();return;}
@@ -477,6 +479,7 @@ function searchKey(event) {
 }
 
 function hitLabel({type,item}) {
+  if (observationLayers[type]) return item.n+' · '+observationLayers[type].label;
   if (waterTransportLayers[type]) return item.n === waterTransportLayers[type].label
     ? item.n : item.n + ' · ' + waterTransportLayers[type].label;
   if(type==='river') return displayName(item.n);
@@ -533,6 +536,7 @@ function featureList(fields) {
   return list;
 }
 function showFeature({type,item}) {
+  if (['withdrawals','quality','drought'].includes(type)) { showObservationFeature(type,item); return; }
   const container=$('#featureDetail');
   container.dataset.kind=type;
   const title=node('h3',type==='department'||type==='region'?item.name:item.n);

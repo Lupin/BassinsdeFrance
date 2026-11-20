@@ -26,11 +26,11 @@ def script_text(name):
     return (dist / name).read_text().replace("</script", "<\\/script")
 
 
-for name in ("points", "protected", "aquifers", "crossings", "topology", "navigation", "locks", "lakes", "captages", "farms", "wastewater", "flood-overview", "industry", "watersheds-overview", "watersheds-detail"):
+for name in ("withdrawals", "quality", "drought", "points", "protected", "aquifers", "crossings", "topology", "navigation", "locks", "lakes", "captages", "farms", "wastewater", "flood-overview", "industry", "watersheds-overview", "watersheds-detail"):
     pattern = f'<script id="{name}-data-lazy" data-src="{name}-data.js"></script>'
     inline = f'<script id="{name}-data-lazy" type="text/plain">{script_text(name+"-data.js")}</script>'
     standalone = standalone.replace(pattern, inline)
-for name in ("startup", "data", "admin", "explore", "flood", "water-transport", "watershed-layer", "app", "fullscreen", "export-graphics", "map-export"):
+for name in ("startup", "data", "admin", "explore", "flood", "water-transport", "watershed-layer", "observations", "app", "fullscreen", "export-graphics", "map-export"):
     pattern = rf'<script src="{name}\.js"(?: defer)?></script>'
     standalone = re.sub(pattern, lambda match: "<script>" + script_text(name+".js") + "</script>", standalone)
 Path("outputs/carte-cours-eau-france.html").write_text(standalone)

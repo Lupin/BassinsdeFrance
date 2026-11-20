@@ -38,7 +38,7 @@ function exportGroundCredits(ground) {
 
 function describeExportMap(ground, includeFlood) {
   const credits = new Set(['BD TOPAGE® (IGN, OFB, Sandre, 2026)',...exportGroundCredits(ground)]);
-  const legend = (basin ? [basinById.get(basin)] : D.basins)
+  const legend = (riverOpacity()>0 ? (basin ? [basinById.get(basin)] : D.basins) : [])
     .map(item => ({label:item.name,color:colors[item.id],shape:'line'}));
   const activeLabels = [];
   for (const [id,label,source,color,shape,filter] of exportLayerCredits) {
@@ -58,6 +58,13 @@ function describeExportMap(ground, includeFlood) {
       if (['all','seveso','high'].includes(value)) legend.push({label:'Seveso · seuil haut',color:'#9d2439',shape:'diamond'});
     } else {
       legend.push({label:name,color,shape});
+    }
+  }
+  for (const entry of observationExportLegend()) legend.push(entry);
+  for (const [key,layer] of Object.entries(observationLayers)) {
+    if ($('#water-'+key).checked) {
+      credits.add((key==='withdrawals'?'BNPE':key==='quality'?'Naïades':'ONDE / OFB')+' via Hub’Eau');
+      activeLabels.push(observationPeriodLabel(key));
     }
   }
   const [west,north] = unproject(world(0,0));
@@ -157,6 +164,9 @@ function ensureExportLayers(includeFlood) {
   if (check('protectedLayer') && !loadedLayers.has('protected')) missing.push('zones protégées');
   if (check('aquiferLayer') && !loadedLayers.has('aquifers')) missing.push('nappes captives');
   if (includeFlood && check('floodLayer') && !displayedFlood?.image) missing.push('enveloppes d’inondation');
+  for (const [key,layer] of Object.entries(observationLayers)) {
+    if (check('water-'+key) && !layer.data) missing.push(layer.label);
+  }
   if (missing.length) throw new Error('Couches indisponibles ou en cours de chargement · '+missing.join(', ')+'. Réessayez l’aperçu ou ajustez la vue.');
 }
 
@@ -247,7 +257,13 @@ async function restoreSavedView(view) {
   closeChoices();
   clearSearch();
   for (const input of exportControls) {
-    const value = view.controls[input.id];
+    const observationDefaults = {riverOpacity:'100','water-withdrawals':false,'water-quality':false,'water-drought':false};
+    const value = view.controls[input.id] ?? observationDefaults[input.id];
+    if (typeof value==='string' && input.tagName==='SELECT' &&
+        Object.values(observationFilters).flat().includes(input.id) &&
+        ![...input.options].some(option=>option.value===value)) {
+      input.dataset.pendingValue=value;
+    }
     if (input.type==='checkbox' && typeof value==='boolean') input.checked = value;
     else if (typeof value==='string' && (input.tagName!=='SELECT' || [...input.options].some(option=>option.value===value))) input.value = value;
   }
@@ -297,6 +313,7 @@ function initMapExport() {
   const filePanel = $('#exportFilePanel'), savePanel = $('#exportSavePanel');
   const fileMode = $('#exportFileMode'), saveMode = $('#exportSaveMode');
   let mode = 'file', generation = 0, previewKey = '', busy = false;
+  let returnFocus = opener;
   let capturedGround = 'none', previewReady = false;
   let previewLegendKey = '';
   const format = () => $('input[name="exportFormat"]:checked').value;
@@ -392,7 +409,7 @@ function initMapExport() {
     $('#exportNoViews').hidden = !!saved.length;
     list.replaceChildren(...saved.map(view => {
       const li = node('li');
-      const restore = makeButton('Réouvrir','export-button',async () => {
+      const restore = makeButton('Afficher','export-button',async () => {
         if (busy) return;
         busy = true;
         try {
@@ -401,8 +418,13 @@ function initMapExport() {
         } catch { restoredStatus.textContent = 'Cette vue n’a pas pu être réouverte.'; }
         finally { busy = false; }
       });
-      restore.setAttribute('aria-label','Réouvrir la vue '+view.name);
-      li.append(node('span',view.name),restore);
+      restore.setAttribute('aria-label','Afficher la vue '+view.name);
+      const label=node('div',null,'saved-view-label');
+      label.append(node('strong',view.name));
+      const count=Object.entries(view.controls).filter(([id,value])=>value===true && (id.startsWith('water-') || ['flowsLayer','protectedLayer','aquiferLayer','watersheds','floodLayer','hydroDams','nuclearPlants'].includes(id))).length;
+      const groundLabel=[...$('#basemap').options].find(option=>option.value===view.controls.basemap)?.text || '';
+      label.append(node('span',[groundLabel,count+' couche'+(count>1?'s':'')].filter(Boolean).join(' · ')));
+      li.append(label,restore);
       return li;
     }));
   }
@@ -412,8 +434,15 @@ function initMapExport() {
     filePanel.hidden = next!=='file'; savePanel.hidden = next!=='save';
     fileMode.setAttribute('aria-pressed',String(next==='file'));
     saveMode.setAttribute('aria-pressed',String(next==='save'));
-    if (next==='save') loadViewList();
-    refreshPreview();
+    $('.export-preview').hidden = next==='save';
+    $('.export-grid').dataset.mode = next;
+    setText($('#exportHeading'),next==='save'?'Mes vues':'Exporter la carte');
+    if (next==='save') {
+      generation++;
+      previewKey='';
+      status.textContent='';
+      loadViewList();
+    } else refreshPreview();
   }
 
   function setResolutions() {
@@ -425,7 +454,7 @@ function initMapExport() {
     resolution.value = chosen;
   }
 
-  opener.addEventListener('click', () => {
+  function openPanel(next,trigger) {
     if (busy) return;
     capturedGround = $('#basemap').value;
     title.value = $('#exportViewName').value = exportMapName();
@@ -434,18 +463,21 @@ function initMapExport() {
     setResolutions();
     previewKey = '';
     restoredStatus.textContent = '';
+    returnFocus=trigger;
     dialog.showModal();
-    switchMode('file');
-  });
+    switchMode(next);
+  }
+  opener.addEventListener('click',()=>openPanel('file',opener));
+  $('#savedViewsOpen').addEventListener('click',()=>openPanel('save',$('#savedViewsOpen')));
   $('#exportClose').addEventListener('click',()=>dialog.close());
   dialog.addEventListener('close',() => {
     generation++;
     previewReady = false;
     canvasPreview.width = canvasPreview.height = 1;
-    opener.focus();
+    returnFocus.focus();
   });
   if (window.ResizeObserver) new ResizeObserver(() => {
-    if (!dialog.open || busy) return;
+    if (!dialog.open || busy || mode==='save') return;
     resize();
     setResolutions();
     refreshPreview();

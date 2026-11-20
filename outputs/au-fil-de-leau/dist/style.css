@@ -404,3 +404,40 @@ dialog p { margin: .4rem 0; font-size: .88rem; }
 .map-section:-webkit-full-screen #mapbox { flex: 1 1 0; height: auto; min-height: 180px; }
 .map-section.map-expanded #mapbox { flex: 1 1 0; height: auto; min-height: 180px; }
 body.map-expanded-open { overflow: hidden; }
+
+#riverOpacity { width: 100%; accent-color: var(--blue); }
+.observation-summary { padding: .45rem .8rem; border-top: 1px solid var(--line); background: var(--fog); font-size: .78rem; }
+.observation-summary .note { font-size: .75rem; }
+.observation-presets { display: flex; align-items: center; flex-wrap: wrap; gap: .3rem; }
+.observation-presets button { min-height: 44px; padding: .3rem .6rem; border: 1px solid #7d919e; border-radius: 4px; font-size: .8rem; }
+.observation-presets button[aria-pressed=true] { color: white; background: var(--blue); border-color: var(--blue); }
+.observation-key, .observation-legend { display: flex; flex-wrap: wrap; gap: .35rem .8rem; font-size: .75rem; margin-top: .45rem; }
+.observation-key-item { display: inline-flex; align-items: center; gap: .3rem; }
+.observation-swatch { display: inline-block; width: 9px; height: 9px; flex: none; background: var(--symbol-color); border: 1px solid #fff; outline: 1px solid var(--symbol-color); }
+.observation-swatch[data-shape=circle] { border-radius: 100%; }
+.observation-swatch[data-shape=triangle] { outline: none; width: 0; height: 0; background: none; border: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 10px solid var(--symbol-color); }
+.observation-table-wrap { max-height: 270px; overflow: auto; margin: .5rem 0; }
+.observation-table { border-collapse: collapse; width: 100%; font-size: .75rem; }
+.observation-table :is(td,th) { text-align: left; padding: .3rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+.observation-table caption { text-align: left; font-weight: 650; padding-bottom: .3rem; }
+.observation-chart { width: 100%; height: auto; display: block; }
+
+.export-swatch[data-shape=triangle] { width: 0; height: 0; background: none; border: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 9px solid var(--export-swatch); }
+
+.conception-credit { grid-column: 1 / -1; margin-top: .7rem; color: var(--muted); font-size: .75rem; }
+
+@media (min-width: 926px) {
+  .atlas:has(.observation-summary:not([hidden])) {
+    grid-template-rows: auto minmax(650px, calc(100vh - 155px));
+    grid-template-rows: auto minmax(650px, calc(100dvh - 155px));
+  }
+}
+
+.export-grid[data-mode=save] { display: block; }
+.save-current-view { border-top: 1px solid var(--line); margin-top: .5rem; padding-top: .45rem; }
+.save-current-view > summary { min-height: 44px; padding: .5rem 0; color: var(--blue); font-size: .875rem; font-weight: 650; cursor: pointer; }
+.save-current-view form { max-width: 32rem; padding-block: .45rem; }
+#exportSavedList li { padding: .65rem 0; }
+.saved-view-label { min-width: 0; display: grid; gap: .15rem; }
+.saved-view-label strong { font-size: .95rem; overflow-wrap: anywhere; }
+.saved-view-label span { font-size: .8rem; color: var(--muted); }
