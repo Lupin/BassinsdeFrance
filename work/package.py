@@ -17,6 +17,14 @@ def published_asset(match):
 published = local_assets.sub(published_asset, template)
 Path("index.html").write_text(published)
 
+legal_template = (dist / "informations-legales.html").read_text()
+legal_published = local_assets.sub(published_asset, legal_template)
+Path("informations-legales.html").write_text(legal_published)
+
+legal_offline = legal_template.replace('href="style.css"', 'href="au-fil-de-leau/dist/style.css"')
+legal_offline = legal_offline.replace('href="index.html"', 'href="carte-cours-eau-france.html"')
+Path("outputs/informations-legales.html").write_text(legal_offline)
+
 font = base64.b64encode((dist / "assets/Inter.ttf").read_bytes()).decode()
 css = (dist / "style.css").read_text().replace("url('assets/Inter.ttf')", "url('data:font/ttf;base64," + font + "')")
 standalone = template.replace('<link rel="stylesheet" href="style.css">', "<style>" + css + "</style>")
