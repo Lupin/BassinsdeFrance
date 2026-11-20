@@ -33,4 +33,4 @@ Ouvrez `index.html` dans un navigateur récent, ou servez la racine avec `python
 Le site est publié avec GitHub Pages depuis la racine de la branche `main`.
 
 
-En cas de difficulté d’affichage, [le mode léger](https://bassinsdefrance.fr/?mode=light) utilise un fond blanc, un réseau moins dense et l’animation en pause au démarrage. Un encart de chargement permet de relancer la page et affiche le détail d’une erreur de démarrage lorsqu’elle est détectée. Les surfaces de dessin sont limitées à 4 096 pixels par côté et 3 millions de pixels par surface pour contenir leur consommation de mémoire dans les grandes fenêtres.
+En cas de difficulté d’affichage, [le mode léger](https://bassinsdefrance.fr/?mode=light) utilise un fond blanc, un réseau moins dense et l’animation en pause au démarrage. Un encart de chargement permet de relancer la page et affiche le détail d’une erreur de démarrage lorsqu’elle est détectée. Dans ce mode explicite, les surfaces de dessin sont limitées à 4 096 pixels par côté et 3 millions de pixels par surface. Le mode standard conserve sa résolution de rendu, sa densité et son animation par défaut.

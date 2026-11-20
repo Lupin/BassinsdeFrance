@@ -149,9 +149,11 @@ function resize() {
   if (!rect.width || !rect.height || (w === rect.width && h === rect.height)) return;
   const center = w && h && (zoom !== 1 || tx || ty) ? world(w/2,h/2) : null;
   w = rect.width; h = rect.height;
-  // Bound each surface and the combined memory cost in large browser windows.
-  dpr = Math.min(devicePixelRatio || 1, window.mapLightweight ? 1 : 1.5,
-    4096 / Math.max(w,h), Math.sqrt(3_000_000 / (w*h)));
+  dpr = Math.min(devicePixelRatio || 1, 1.5);
+  // Extra limits apply only when the visitor explicitly selects light mode.
+  if (window.mapLightweight) {
+    dpr = Math.min(dpr,1,4096 / Math.max(w,h),Math.sqrt(3_000_000 / (w*h)));
+  }
   canvas.width = flowCanvas.width = base.width = labelsLayer.width = Math.round(w*dpr);
   canvas.height = flowCanvas.height = base.height = labelsLayer.height = Math.round(h*dpr);
   const padding = w < 570 ? 22 : 52;
